@@ -1,0 +1,48 @@
+# ==========================
+# IDE
+# ==========================
+.vscode/
+.idea/
+*.iml
+
+# ==========================
+# Java / Maven
+# ==========================
+target/
+*.class
+*.jar
+*.war
+
+# ==========================
+# Node / React
+# ==========================
+node_modules/
+dist/
+build/
+
+# ==========================
+# Environment files
+# ==========================
+.env
+.env.*
+
+# ==========================
+# Local Spring profiles
+# ==========================
+**/application-local.properties
+
+# Ignore docker profile ONLY if it contains secrets.
+# If it only contains Docker configuration, REMOVE this line.
+**/application-docker.properties
+
+# ==========================
+# Logs
+# ==========================
+logs/
+*.log
+
+# ==========================
+# OS files
+# ==========================
+.DS_Store
+Thumbs.db
