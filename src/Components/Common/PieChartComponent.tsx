@@ -49,7 +49,7 @@ label
 >
 
 {
-data.map((entry,index)=>(
+data.map((index)=>(
 
 <Cell
 key={`cell-${index}`}

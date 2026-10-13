@@ -9,13 +9,10 @@ import Loader from "../Common/Loader";
 
 
 const DoctorAppointment=()=>{
-    interface Doctor {
-    id: number;
-    name: string;
-}
+ 
 
     const navigate=useNavigate();
-    const [showForm, setShowForm] = useState<boolean>(false);
+  
     const [appointments, setAppointments] = useState<any[]>([]);
     const [pageLoading, setPageLoading] = useState<boolean>(true);
     const user=useSelector((state:RootState)=>state.user);

@@ -3,7 +3,7 @@ import { addInventoryAPI, getAllInventoryAPI, getAllMedicinesAPI, updateInventor
 import { validateMedicineInventory, type MedicineInventoryErrors } from "../../Utils/Validators/medicineValidators";
 import { FaRegEdit } from "react-icons/fa";
 import Loader from "../Common/Loader";
-import { MdDeleteForever } from "react-icons/md";
+
 
 
 

@@ -102,13 +102,7 @@ const loadAppointments = async () => {
 const handleSubmit = async (e: React.FormEvent) => {
   e.preventDefault();
 
-  const appointment = {
-    patientId: user.id,
-    doctorId: selectedDoctorId,
-    appointmentTime,
-    reason,
-    notes,
-  };
+
 
   const validationErrors = validateAppointment({
     doctorId: selectedDoctorId,
