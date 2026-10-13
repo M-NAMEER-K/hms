@@ -13,7 +13,7 @@ import Loader from "../Common/Loader";
 const DoctorDashboard = () => {
 
 
-    const [reasons,setReasons] = useState<any[]>([]);
+  
     const [appointments,setAppointments] = useState<any[]>([]);
     const [patients,setPatients] = useState<any[]>([]);
     const [pageLoading, setPageLoading] = useState(true);
@@ -32,7 +32,7 @@ useEffect(() => {
             const reasonData =
                 await getAppointmentReasonsByPatientServiceAPI(patientId);
 
-            setReasons(reasonData);
+          
 
             const appointmentData =
                 await getAllAppointmentsByDoctorServiceAPI(user.profileId);

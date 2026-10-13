@@ -6,7 +6,7 @@ const jwtSlice=createSlice({
       name:"jwt",
       initialState:localStorage.getItem("token")||"",
       reducers:{
-          setJwt:(state , action)=>{
+          setJwt:(_state , action)=>{
                localStorage.setItem('token',action.payload);
                  return action.payload;
                

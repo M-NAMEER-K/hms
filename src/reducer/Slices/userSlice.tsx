@@ -6,7 +6,7 @@ const userSlice=createSlice({
       name:"user",
       initialState:localStorage.getItem("user")?(JSON.parse(localStorage.getItem("user")!)||""):{},
       reducers:{
-          setUser:(state , action)=>{
+          setUser:(_state , action)=>{
             localStorage.setItem("user",JSON.stringify(action.payload));
             
               return action.payload;

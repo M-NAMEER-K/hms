@@ -36,11 +36,7 @@ const [profilePicId,setProfilePicId]=useState<number|null>(null);
 const [profilePicUrl,setProfilePicUrl]=useState<string|null>(null);
 
 
-const handleImage=(id:number)=>{
 
-setProfilePicId(id);
-
-}
 
 const user=useSelector((state:RootState)=>state.user);
 

@@ -116,8 +116,9 @@ setErrors(validationErrors);
 if (Object.keys(validationErrors).length > 0) {
     return;
 }
-
-  if (editingId) {
+         setLoading(true);
+         try {
+             if (editingId) {
 
     await updateAppointmentServiceAPI({
         id: editingId,
@@ -140,8 +141,14 @@ if (Object.keys(validationErrors).length > 0) {
 
 }
 
-  setShowForm(false);
+ 
 
+         } catch (error) {
+             console.log(error);
+         }finally{
+            setLoading(false);
+         }
+  setShowForm(false);
   loadAppointments(); // refresh table
 };
 
