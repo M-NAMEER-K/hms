@@ -29,8 +29,7 @@ useEffect(() => {
         setPageLoading(true);
 
         try {
-            const reasonData =
-                await getAppointmentReasonsByPatientServiceAPI(patientId);
+           
 
           
 
