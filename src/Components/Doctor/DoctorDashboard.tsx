@@ -3,7 +3,7 @@
 
 import { useEffect, useState } from "react";
 
-import { getAllAppointmentsByDoctorServiceAPI, getAppointmentReasonsByPatientServiceAPI } from "../../Services/AppointmentServiceOps";
+import { getAllAppointmentsByDoctorServiceAPI } from "../../Services/AppointmentServiceOps";
 import { useSelector } from "react-redux";
 import type { RootState } from "../../reducer/Store/store";
 import Loader from "../Common/Loader";
@@ -21,7 +21,7 @@ const DoctorDashboard = () => {
    const user = useSelector((state: RootState) => state.user);
 
 
-    const patientId = user.id;
+
 
 
 useEffect(() => {
