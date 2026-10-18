@@ -19,13 +19,24 @@ const DoctorDashboard = () => {
     const [pageLoading, setPageLoading] = useState(true);
 
    const user = useSelector((state: RootState) => state.user);
-
-
+    
+         const [currentPage, setCurrentPage] = useState(0);
+           const [totalPages, setTotalPages] = useState(0);
+           const pageSize = 5;
+  const [filters,setFilters] = useState({
+    
+    status:[],
+    fromDate:"",
+     toDate:"",
+    sortBy:"appointmentTime",
+    sortDirection:"DESC"
+    
+    });
 
 
 
 useEffect(() => {
-    const loadDashboard = async () => {
+    const loadDashboard = async (page: number, appliedFilters = filters) => {
         setPageLoading(true);
 
         try {
@@ -34,19 +45,22 @@ useEffect(() => {
           
 
             const appointmentData =
-                await getAllAppointmentsByDoctorServiceAPI(user.profileId);
+                await getAllAppointmentsByDoctorServiceAPI( user.profileId, page,  pageSize,  appliedFilters);
 
-            setAppointments(appointmentData);
+         const appointmentsList = appointmentData.content || [];
 
-            const uniquePatients = appointmentData.filter(
-                (patient: any, index: number, self: any[]) =>
-                    index ===
-                    self.findIndex(
-                        (p: any) => p.patientId === patient.patientId
-                    )
-            );
+setAppointments(appointmentsList);
+setTotalPages(appointmentData.totalPages || 0);
 
-            setPatients(uniquePatients);
+
+const uniquePatients = appointmentsList.filter(
+    (patient:any,index:number,self:any[]) =>
+        index === self.findIndex(
+            (p:any)=>p.patientId === patient.patientId
+        )
+);
+
+setPatients(uniquePatients);
         } catch (err) {
             console.log(err);
         } finally {
@@ -54,8 +68,9 @@ useEffect(() => {
         }
     };
 
-    loadDashboard();
-}, []);
+   loadDashboard(currentPage);
+
+},[currentPage]);
 
 if (pageLoading) {
     return <Loader />;

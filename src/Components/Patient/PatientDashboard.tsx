@@ -15,6 +15,23 @@ const PatientDashboard = () => {
     const [appointments,setAppointments] = useState<any[]>([]);
     const [medicines,setMedicines] = useState<any[]>([]);
     const [pageLoading, setPageLoading] = useState<boolean>(true);
+      const [currentPage, setCurrentPage] = useState(0);
+        const [totalPages, setTotalPages] = useState(0);
+        const pageSize = 2;
+        const [filters,setFilters] = useState({
+    
+    status:[],
+    fromDate:"",
+    toDate:"",
+    sortBy:"appointmentTime",
+    sortDirection:"DESC"
+    
+    });
+
+    const [medicineFilter,setMedicineFilter]=useState( {
+            sortBy:"prescriptionDate",
+            sortDirection:"DESC"
+        });
 
    const user = useSelector((state: RootState) => state.user);
 
@@ -24,7 +41,7 @@ const PatientDashboard = () => {
 
 useEffect(()=>{
 
-    const loadDashboard = async()=>{
+    const loadDashboard = async (page:number,appliedFilters=filters)=>{
 
         setPageLoading(true);
 
@@ -36,24 +53,28 @@ useEffect(()=>{
             setReasons(reasonData);
 
 
-            const appointmentData =
-            await getAllAppointmentsByPatientServiceAPI(patientId);
+            const data = await getAllAppointmentsByPatientServiceAPI(user.id , page , pageSize ,  appliedFilters);
 
-            setAppointments(appointmentData);
+        setAppointments(data.content || []);
+    
+
+    setTotalPages(data.totalPages);
 
 
 
             const prescriptionData =
-            await getPatientPrescriptionsServiceAPI(patientId);
+            await getPatientPrescriptionsServiceAPI(user.id , page , pageSize ,  medicineFilter);
 
 
-            const allMedicines =
-            prescriptionData.flatMap(
-                (item:any)=>item.medicines
-            );
+         const prescriptions = prescriptionData.content || [];
 
+const allMedicines = prescriptions.flatMap(
+    (item:any)=>item.medicines
+);
 
-            setMedicines(allMedicines);
+setMedicines(allMedicines);
+
+            
 
 
         }
@@ -67,10 +88,10 @@ useEffect(()=>{
     }
 
 
-    loadDashboard();
+   loadDashboard(currentPage);
 
 
-},[patientId]);
+},[patientId,currentPage,medicineFilter]);
 
  if(pageLoading){
     return <Loader />;

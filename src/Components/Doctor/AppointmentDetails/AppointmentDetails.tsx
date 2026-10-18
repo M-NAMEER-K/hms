@@ -41,9 +41,10 @@ const loadReport = async () => {
     try {
         const data =
             await getAppointmentReportByAppointmentIdServiceAPI(
+              
                 Number(params.id)
             );
-
+  
         setReport(data);
     } catch {
         setReport(null);
@@ -110,7 +111,7 @@ if (pageLoading) {
       
       <div className="w-full">
        
-        {activeTab === "prescriptions" && <Prescriptions  appointment={appointment}    onAppointmentSelect={setSelectedAppointment}/>}
+        {activeTab === "prescriptions" && <Prescriptions   appointment={appointment}    onAppointmentSelect={setSelectedAppointment}/>}
         {activeTab === "reports" && <Reports  report={report} appointment={appointment}/>}
       </div>
              

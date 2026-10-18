@@ -2,6 +2,9 @@ package com.hm.pharmacy_ms.service;
 
 import java.time.LocalDate;
 import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.PageRequest;
 
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -27,11 +30,16 @@ public class MedicineInventoryServiceImpl  implements MedicineInventoryService{
       private final MedicineRepository medicineRepository;
     private final MedicineInventoryRepository medicineInventoryRepository;
      
-    @Override 
-      public List<MedicineInventoryDto> getAllMedicines() throws HmsException{
-     List<MedicineInventory> inventories=(List<MedicineInventory>) medicineInventoryRepository.findAll();
-       return inventories.stream().map(MedicineInventory::toDto).toList();
-      }
+  @Override
+public Page<MedicineInventoryDto> getAllMedicines(int page, int size) throws HmsException {
+
+    Pageable pageable = PageRequest.of(page, size);
+
+    Page<MedicineInventory> inventories =
+            medicineInventoryRepository.findAll(pageable);
+
+    return inventories.map(MedicineInventory::toDto);
+}
     
 
       @Override 

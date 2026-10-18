@@ -4,16 +4,27 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+
+import com.hm.appointment_ms.dto.filters.PrescriptionFilterDto;
+import com.hm.appointment_ms.dto.specification.PrescriptionSpecification;
+
+
 import org.springframework.stereotype.Service;
 
 import com.hm.appointment_ms.clients.ProfileClient;
 import com.hm.appointment_ms.dto.DoctorName;
 import com.hm.appointment_ms.dto.PrescriptionDetailsDto;
 import com.hm.appointment_ms.dto.PrescriptionDto;
+
 import com.hm.appointment_ms.dto.MedicineDto;
 import com.hm.appointment_ms.entity.Prescription;
 import com.hm.appointment_ms.exception.HmsException;
-import com.hm.appointment_ms.repositories.MedicineRepository;
+
 import com.hm.appointment_ms.repositories.PrescriptionRespository;
 
 import jakarta.transaction.Transactional;
@@ -54,30 +65,63 @@ public class PrescriptionServiceImpl implements PrescriptionService{
        return prescriptionDto;
             }
 
-            @Override
-            public List<PrescriptionDetailsDto> getPrescriptionsByPatientId(Long patientId) throws HmsException{
-                  List<Prescription> prescriptions=prescriptionRespository.findAllByPatientId(patientId);
-                    List<PrescriptionDetailsDto> prescriptionDetails=prescriptions.stream().map(Prescription::toDetails).toList();
-                 
-                    prescriptionDetails.forEach(details ->{
-                      details.setMedicines(medicineService.getAllMedicinesByPrescriptionId(details.getId()));
-                    });
+       @Override
+        public Page<PrescriptionDetailsDto> getPrescriptionsByPatientId( Long patientId,PrescriptionFilterDto request,int page,int size) throws HmsException {
 
-                    List<Long> doctorIds=prescriptionDetails.stream().map(PrescriptionDetailsDto::getDoctorId).distinct().toList();
-                    List<DoctorName> doctorNames=profileClient.getDoctorsById(doctorIds);
-                    Map<Long , String> doctorMap=doctorNames.stream().collect(Collectors.toMap(DoctorName::getId , DoctorName::getName));
-                    prescriptionDetails.forEach( details -> {
-                      String doctorName = doctorMap.get(details.getDoctorId());
-                      if(doctorName !=null){
-              details.setDoctorName(doctorName);
-                      }
-                      else{
-                        details.setDoctorName("Unknown Doctor");
-                      }
-                    });
-                    return prescriptionDetails;
+    Sort sort = Sort.by( Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());
 
-                }
+    Pageable pageable = PageRequest.of(page, size, sort);
+
+    Page<Prescription> prescriptionPage =
+            prescriptionRespository.findAll( PrescriptionSpecification.filter(request, patientId), pageable);
+
+    List<PrescriptionDetailsDto> prescriptionDetails =
+            prescriptionPage.getContent()
+                    .stream()
+                    .map(Prescription::toDetails)
+                    .toList();
+
+    // Medicines
+    prescriptionDetails.forEach(details -> {
+        details.setMedicines(
+                medicineService.getAllMedicinesByPrescriptionId(details.getId())
+        );
+    });
+
+    // Doctor Names
+    List<Long> doctorIds = prescriptionDetails.stream()
+            .map(PrescriptionDetailsDto::getDoctorId)
+            .distinct()
+            .toList();
+
+    if (!doctorIds.isEmpty()) {
+
+        List<DoctorName> doctorNames =
+                profileClient.getDoctorsById(doctorIds);
+
+        Map<Long, String> doctorMap =
+                doctorNames.stream()
+                        .collect(Collectors.toMap(
+                                DoctorName::getId,
+                                DoctorName::getName));
+
+        prescriptionDetails.forEach(details -> {
+
+            String doctorName =
+                    doctorMap.get(details.getDoctorId());
+
+            details.setDoctorName(
+                    doctorName != null
+                            ? doctorName
+                            : "Unknown Doctor");
+        });
+    }
+
+    return new PageImpl<>(
+            prescriptionDetails,
+            pageable,
+            prescriptionPage.getTotalElements());
+}
 
                 @Override
                  public List<PrescriptionDetailsDto> getPrescriptions() throws HmsException{

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { getAllPatientsAPI } from "../../Services/ProfileServiceOps";
 import { FaRegEye } from "react-icons/fa";
 import Loader from "../Common/Loader";
+import Pagination from "../Common/Pagination";
 
 
 interface Patient {
@@ -26,18 +27,26 @@ const Patient=()=>{
     const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
     const [showModal, setShowModal] = useState(false);
 
-   useEffect(() => {
-        loadPatients();
-    }, []);
+    const [currentPage, setCurrentPage] = useState(0);
+const [totalPages, setTotalPages] = useState(0);
 
-    const loadPatients = async () => {
+const pageSize = 5;
+
+  useEffect(() => {
+    loadPatients(currentPage);
+}, [currentPage]);
+
+   const loadPatients = async (currentPage:number) => {
         setPageLoading(true);
 
         try {
-            const data = await getAllPatientsAPI();
+           const data = await getAllPatientsAPI(currentPage,pageSize);
             console.log(data);
 
-            setPatients(Array.isArray(data) ? data : []);
+            setPatients(data.content || []);
+setCurrentPage(data.number);
+setTotalPages(data.totalPages);
+
         } catch (e) {
             console.log(e);
             setPatients([]);
@@ -231,6 +240,12 @@ const Patient=()=>{
 
     </div>
 )}
+
+ <Pagination
+    currentPage={currentPage}
+    totalPages={totalPages}
+    onPageChange={(page)=>setCurrentPage(page)}
+/>
 
         </div>
     );

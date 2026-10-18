@@ -11,17 +11,24 @@ import { removeUser } from "../../reducer/Slices/userSlice";
 
 const Navbar=()=>{
       const [openSidebar, setOpenSidebar] = useState<boolean>(false);
+      const [showLogoutPopup, setShowLogoutPopup] = useState(false);
+      const [logoutLoading, setLogoutLoading] = useState(false);
       const token=useSelector((state:RootState)=>state.jwt);
       const dispatch=useDispatch();
       const navigate=useNavigate();
 
 
-      const logoutHandler = () => {
-    dispatch(removeJwt());
-    dispatch(removeUser());
-    navigate("/login", { replace: true });
-}
+ const logoutHandler = () => {
+    setLogoutLoading(true);
 
+    setTimeout(() => {
+        dispatch(removeJwt());
+        dispatch(removeUser());
+        setShowLogoutPopup(false);
+        setLogoutLoading(false);
+        navigate("/login", { replace: true });
+    }, 800);
+}
 
 
 
@@ -36,7 +43,7 @@ const Navbar=()=>{
                    {   
                   
                  token?(<div className="flex items-center  justify-center">
-                          <button onClick={logoutHandler} className="bg-pink-500 hover:bg-pink-400 text-white rounded-lg p-2">Logout</button>
+                          <button   onClick={()=>setShowLogoutPopup(true)} className="bg-pink-500 hover:bg-pink-400 text-white rounded-lg p-2">Logout</button>
                               <button><BsThreeDotsVertical onClick={()=>setOpenSidebar(true)} /></button>
                               <Sidebar open={openSidebar}  closeSidebar={()=>setOpenSidebar(false)} 
                                 />
@@ -48,7 +55,39 @@ const Navbar=()=>{
               }
             </div>
               
-             
+              {showLogoutPopup && (
+  <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+      <div className="bg-white p-5 rounded-xl shadow-lg">
+          <h2 className="text-lg font-semibold">
+             Confirm Logout
+          </h2>
+
+          <p className="text-gray-600 mt-2">
+             Are you sure you want to logout?
+          </p>
+
+          <div className="flex justify-end gap-3 mt-5">
+              <button
+                onClick={()=>setShowLogoutPopup(false)}
+                className="px-4 py-2 border rounded-lg">
+                Cancel
+              </button>
+
+            <button
+  onClick={logoutHandler}
+  disabled={logoutLoading}
+  className={`px-4 py-2 rounded-lg text-white ${
+      logoutLoading 
+      ? "bg-pink-300 cursor-not-allowed" 
+      : "bg-pink-500 hover:bg-pink-600"
+  }`}
+>
+  {logoutLoading ? "Logging out..." : "Logout"}
+</button>
+          </div>
+      </div>
+  </div>
+)}
 
            
         </div>

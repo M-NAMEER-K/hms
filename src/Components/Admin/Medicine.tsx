@@ -5,6 +5,7 @@ import { medicineTypes } from "../../Utils/constants/Medicine";
 import { addMedicineServiceAPI, getAllMedicinesAPI, updateMedicineAPI } from "../../Services/AdminServiceOps";
 import { FaRegEdit } from "react-icons/fa";
 import Loader from "../Common/Loader";
+import Pagination from "../Common/Pagination";
 
 
 const Medicine=()=>{
@@ -20,8 +21,10 @@ const [category, setCategory] =useState<string>("");
 const [type, setType] = useState<string>("");
 const [manufacturer, setManufacturer] =useState<string>("");
 const [unitPrice, setUnitPrice] = useState("");
+const [currentPage,setCurrentPage] = useState(0);
+const [totalPages,setTotalPages] = useState(0);
 
-
+const pageSize = 5;
 
 
 useEffect(() => {
@@ -31,8 +34,9 @@ useEffect(() => {
         setPageLoading(true);
 
         try {
-            await fetchMedicines();
-        } catch(error) {
+            await fetchMedicines(currentPage);
+        } 
+        catch(error) {
             console.log(error);
         }
         finally {
@@ -43,15 +47,29 @@ useEffect(() => {
 
     loadMedicines();
 
-}, []);
+}, [currentPage]);
 
-const fetchMedicines = async () => {
+const fetchMedicines = async(page:number)=>{
 
-    try {
-        const response = await getAllMedicinesAPI();
-        setMedicines(response);
-    } catch (error) {
+    try{
+
+        const response = await getAllMedicinesAPI(
+            page,
+            pageSize
+        );
+
+
+        setMedicines(response.content || []);
+
+        setTotalPages(response.totalPages || 0);
+
+
+    }catch(error){
+
         console.log(error);
+
+        setMedicines([]);
+
     }
 
 };
@@ -118,7 +136,7 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
             await addMedicineServiceAPI(medicineData);
         }
 
-        await fetchMedicines();
+       await fetchMedicines(currentPage);
 
         resetForm();
         setShowForm(false);
@@ -511,7 +529,11 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
        </div>
    
 )}
-      
+       <Pagination
+    currentPage={currentPage}
+    totalPages={totalPages}
+    onPageChange={(page)=>setCurrentPage(page)}
+/>
               </div>
      )
 }

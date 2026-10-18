@@ -1,6 +1,7 @@
 package com.hm.profile_ms.api;
 
 import java.util.List;
+import org.springframework.data.domain.Page;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -55,8 +56,9 @@ public class PatientApi {
      }
 
      @GetMapping("/getAll")
-     public ResponseEntity<List<PatientDto>> getAllPatients() throws HmsException{
-        return new ResponseEntity<>(patientService.getAllPatients(),HttpStatus.OK);
+     public ResponseEntity<Page<PatientDto>> getAllPatients( @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "5") int size) throws HmsException{
+      
+        return new ResponseEntity<>(patientService.getAllPatients(page,size),HttpStatus.OK);
      }
 
       @GetMapping("/getProfileId/{id}")

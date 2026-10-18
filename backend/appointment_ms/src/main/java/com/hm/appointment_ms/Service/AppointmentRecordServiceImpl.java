@@ -15,6 +15,7 @@ import com.hm.appointment_ms.dto.RecordDetailsDto;
 import com.hm.appointment_ms.entity.AppointmentRecord;
 import com.hm.appointment_ms.exception.HmsException;
 import com.hm.appointment_ms.repositories.AppointmentRecordRepository;
+import com.hm.appointment_ms.repositories.AppointmentRepository;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -27,7 +28,7 @@ public class AppointmentRecordServiceImpl implements AppointmentRecordService{
     private final AppointmentRecordRepository appointmentRecordRepository;
     private final PrescriptionService prescriptionService;
     private final ProfileClient profileClient;
-
+     private final AppointmentRepository appointmentRepository;
 
     @Override 
     public Long createAppointmentRecord(AppointmentRecordDto request) throws HmsException{
@@ -40,6 +41,7 @@ public class AppointmentRecordServiceImpl implements AppointmentRecordService{
              request.getPrescription().setAppointmentId(request.getAppointmentId());
              prescriptionService.savePrescription(request.getPrescription());
            }
+           appointmentRepository.updateAppointmentStatus(request.getAppointmentId());
            return id;
     }
 

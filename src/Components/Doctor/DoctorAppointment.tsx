@@ -6,6 +6,9 @@ import { getAllAppointmentsByDoctorServiceAPI } from "../../Services/Appointment
 import { FaExternalLinkAlt } from "react-icons/fa";
 import { useNavigate } from "react-router";
 import Loader from "../Common/Loader";
+import Filter from "../Common/Filter";
+import Pagination from "../Common/Pagination";
+import { appointmentFilterConfig } from "../../Utils/filters/appointmentFilterConfig";
 
 
 const DoctorAppointment=()=>{
@@ -16,21 +19,40 @@ const DoctorAppointment=()=>{
     const [appointments, setAppointments] = useState<any[]>([]);
     const [pageLoading, setPageLoading] = useState<boolean>(true);
     const user=useSelector((state:RootState)=>state.user);
-  
+     
+      const [currentPage, setCurrentPage] = useState(0);
+        const [totalPages, setTotalPages] = useState(0);
+        const pageSize = 2;
+        const [filters,setFilters] = useState({
+    
+    status:[],
+    fromDate:"",
+     toDate:"",
+    sortBy:"appointmentTime",
+    sortDirection:"DESC"
+    
+    });
 
 useEffect(() => {
-  loadAppointments();
-  
-}, []);
+    loadAppointments(currentPage, filters);
+}, [currentPage, filters]);
 
 
-const loadAppointments = async () => {
+const loadAppointments = async ( page: number, appliedFilters = filters) => {
   setPageLoading(true);
   try {
     
-    const data = await getAllAppointmentsByDoctorServiceAPI(user.profileId);
-            console.log(data);
-    setAppointments(Array.isArray(data) ? data : []);
+    const data = await getAllAppointmentsByDoctorServiceAPI(
+    user.profileId,
+    page,
+    pageSize,
+    appliedFilters
+);
+
+setAppointments(data.content || []);
+setCurrentPage(data.number);
+setTotalPages(data.totalPages);
+ 
 
   } catch (e) {
     console.error(e);
@@ -49,6 +71,23 @@ if (pageLoading) {
         <div className="w-[90%] h-screen  ">
                 
                <p className="text-xl font-medium text-green-500">Appointments</p>   
+               <div className="w-full flex justify-end ">
+                                
+                              <Filter
+
+config={appointmentFilterConfig}
+
+initialFilters={filters}
+
+onApplyFilter={(newFilters)=>{
+
+setFilters(newFilters);
+setCurrentPage(0);
+
+}}
+
+/>
+                               </div>
                 
     {appointments.length === 0 ? (
     <div className="flex justify-center items-center py-10 text-gray-500 font-medium">
@@ -174,7 +213,7 @@ if (pageLoading) {
     
 )}
 
-
+       <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={(page) => setCurrentPage(page)}/>
         </div>
      )
 }

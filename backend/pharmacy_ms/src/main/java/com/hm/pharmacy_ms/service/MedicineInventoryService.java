@@ -5,10 +5,10 @@ import java.util.List;
 import com.hm.pharmacy_ms.dto.MedicineInventoryDto;
 
 import com.hm.pharmacy_ms.exception.HmsException;
-
+import org.springframework.data.domain.Page;
 public interface MedicineInventoryService {
       
-    public List<MedicineInventoryDto> getAllMedicines() throws HmsException;
+    public Page<MedicineInventoryDto> getAllMedicines(int page,int size) throws HmsException;
     public MedicineInventoryDto getMedicineById(Long id) throws HmsException;
     public MedicineInventoryDto addMedicine(MedicineInventoryDto medicine) throws HmsException;
     public MedicineInventoryDto updateMedicine(MedicineInventoryDto medicine) throws HmsException;

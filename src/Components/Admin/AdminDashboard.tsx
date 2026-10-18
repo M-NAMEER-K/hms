@@ -13,14 +13,21 @@ import Loader from "../Common/Loader";
 
 const AdminDashboard=()=>{
 
-
+const [currentPage, setCurrentPage] = useState(0);
+    const [totalPages, setTotalPages] = useState(0);
+    const pageSize = 5;
 
 const [doctors,setDoctors] = useState<any[]>([]);
 const [patients,setPatients] = useState<any[]>([]);
 
 const [medicines,setMedicines] = useState<any[]>([]);
 const [pageLoading, setPageLoading] = useState(true);
-
+  const [filters, setFilters] = useState({
+    departments: [],
+    specializations: [],
+    sortBy: "name",
+    sortDirection: "ASC"
+    }); 
    const user = useSelector((state: RootState) => state.user);
 
 
@@ -33,22 +40,23 @@ try{
 
 
 const doctorData =
-await getAllDoctorsAPI();
+await getAllDoctorsAPI(currentPage,pageSize,filters);
 
-setDoctors(doctorData);
+setDoctors(doctorData.content || []);
 
 
 
 const patientData =
-await getAllPatientsAPI();
+await getAllPatientsAPI(currentPage,pageSize);
 
-setPatients(patientData);
-
-
-const medicineData=await getAllMedicinesAPI();
-setMedicines(medicineData);
+setPatients(patientData.content || []);
 
 
+const medicineData=await getAllMedicinesAPI(currentPage,pageSize);
+
+
+setMedicines(medicineData.content || []);
+setTotalPages(medicineData.totalPages || 0);
 
 
 

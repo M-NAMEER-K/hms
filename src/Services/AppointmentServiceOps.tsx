@@ -1,6 +1,12 @@
 import { appointmentService } from "./api";
 import { apiConnector } from "./Interceptor";
 
+interface AppointmentPageResponse {
+    content: any[];
+    number: number;
+    totalPages: number;
+    totalElements: number;
+}
 
 export const scheduleAppointmentServiceAPI = async (data: any) => {
     try{
@@ -15,18 +21,50 @@ export const scheduleAppointmentServiceAPI = async (data: any) => {
 
 };
 
-export const getAllAppointmentsByPatientServiceAPI = async (  patientId: number) => {
+export const getAllAppointmentsByPatientServiceAPI = async (patientId:number, page:number, size:number, filters:any):Promise<AppointmentPageResponse> => {
 
-      try{
-             const result = await apiConnector({method: "GET",url: `${appointmentService.GET_ALL_BY_PATIENT}/${patientId}`,body:null});
-         console.log(result);
-  return result.data;
+    
+   try{
+       const params = new URLSearchParams();
+
+    params.append("page",String(page));
+    params.append("size",String(size));
+
+
+if(filters.status){
+
+    params.append(
+        "status",
+        filters.status
+    );
+
+}
+
+
+if(filters.fromDate){
+    params.append("fromDate", filters.fromDate);
+}
+
+if(filters.toDate){
+    params.append("toDate", filters.toDate);
+}
+
+    if(filters.sortBy){
+        params.append("sortBy",filters.sortBy);
     }
-    catch(err:any){
-         throw err;
+
+    if(filters.sortDirection){
+        params.append("sortDirection",filters.sortDirection);
     }
-  
-};
+
+
+    const result = await apiConnector({ method:"GET", url:`${appointmentService.GET_ALL_BY_PATIENT}/${patientId}?${params.toString()}`, body:null});
+           console.log(result.data);
+    return result.data;
+    } catch (err: any) {
+        throw err;
+    }
+}
 
 export const cancelAppointmentServiceAPI = async (  appointmentId: number) => {
     try { 
@@ -49,16 +87,58 @@ export const updateAppointmentServiceAPI = async (data: any) => {
   }
 };
 
-export const getAllAppointmentsByDoctorServiceAPI = async (doctorId: number) => {
+export const getAllAppointmentsByDoctorServiceAPI = async ( doctorId: number, page: number, size: number, filters: any): Promise<AppointmentPageResponse> => {
+
+    const params = new URLSearchParams();
+
+    params.append("page", String(page));
+    params.append("size", String(size));
+
+if(filters.status){
+
+    params.append(
+        "status",
+        filters.status
+    );
+
+}
+
+
+if(filters.fromDate){
+    params.append("fromDate", filters.fromDate);
+}
+
+if(filters.toDate){
+    params.append("toDate", filters.toDate);
+}
+
+    if (filters.sortBy) {
+        params.append("sortBy", filters.sortBy);
+    }
+
+    if (filters.sortDirection) {
+        params.append("sortDirection", filters.sortDirection);
+    }
+
+    if (filters.startDate) {
+        params.append("startDate", filters.startDate);
+    }
+
+    if (filters.endDate) {
+        params.append("endDate", filters.endDate);
+    }
 
     try {
-         const response = await apiConnector(  {method:"GET",url:`${appointmentService.GET_ALL_BY_DOCTOR}/${doctorId}`   ,body:null});
-              
-    return response.data;
-    } catch (err:any) {
-         throw err;
+        const response = await apiConnector({
+            method: "GET",
+            url: `${appointmentService.GET_ALL_BY_DOCTOR}/${doctorId}?${params.toString()}`,
+            body: null
+        });
+        console.log(response.data);
+        return response.data;
+    } catch (err: any) {
+        throw err;
     }
-    
 };
 
 export const getAppointmentDetailsServiceAPI = async (appointmentId: number) => {
@@ -135,13 +215,43 @@ export const getPatientRecordsServiceAPI = async ( patientId: number) => {
     }
 };
 
-export const getPatientPrescriptionsServiceAPI = async ( patientId: number) => {
+export const getPatientPrescriptionsServiceAPI = async ( patientId: number, page: number, size: number, filters: any) => {
+
+    const params = new URLSearchParams();
+
+    params.append("page", String(page));
+    params.append("size", String(size));
+
+
+    filters.doctorId && 
+        params.append("doctorId", String(filters.doctorId));
+
+
+    filters.startDate &&
+        params.append("startDate", filters.startDate);
+
+
+    filters.endDate &&
+        params.append("endDate", filters.endDate);
+
+
+    filters.sortBy &&
+        params.append("sortBy", filters.sortBy);
+
+
+    filters.sortDirection &&
+        params.append("sortDirection", filters.sortDirection);
+
+
     try {
-        const response = await apiConnector({ method: "GET", url: `${appointmentService.GET_PRESCRIPTIONS_BY_PATIENT}/${patientId}`, body: null, });
+
+        const response = await apiConnector({ method:"GET",url:`${appointmentService.GET_PRESCRIPTIONS_BY_PATIENT}/${patientId}?${params.toString()}`,body:null });
+
 
         return response.data;
-    } catch (err: any) {
-       throw err;
+
+    }catch(err:any){
+        throw err;
     }
 };
 

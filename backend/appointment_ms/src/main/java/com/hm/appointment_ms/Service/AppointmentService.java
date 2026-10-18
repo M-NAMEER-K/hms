@@ -2,10 +2,14 @@ package com.hm.appointment_ms.Service;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+
+
 import com.hm.appointment_ms.dto.AppointmentDetailsDto;
 import com.hm.appointment_ms.dto.AppointmentDto;
 import com.hm.appointment_ms.dto.MonthlyVisitDto;
 import com.hm.appointment_ms.dto.ReasonCountDto;
+import com.hm.appointment_ms.dto.filters.AppointmentFilterDto;
 import com.hm.appointment_ms.exception.HmsException;
 
 public interface AppointmentService {
@@ -16,8 +20,8 @@ public interface AppointmentService {
       public void rescheduleAppointment(Long appointmentId , String newDateTime);
       public AppointmentDto getAppointmentDetails(Long appointmentId) throws HmsException;
       public AppointmentDetailsDto getAppointmentDetailsWithName(Long appointmentId) throws HmsException;
-      public List<AppointmentDetailsDto> getAllAppointmentsByPatientId(Long patientId) throws HmsException;
-      public List<AppointmentDetailsDto> getAllAppointmentsByDoctorId(Long doctorId) throws HmsException;
+      public Page<AppointmentDetailsDto> getAllAppointmentsByPatientId(Long patientId ,AppointmentFilterDto request,int page,int size) throws HmsException;
+      public Page<AppointmentDetailsDto> getAllAppointmentsByDoctorId(Long doctorId ,AppointmentFilterDto request,int page,int size) throws HmsException;
       public void updateAppointment(AppointmentDto dto) throws HmsException;
       public List<MonthlyVisitDto> getAppointmentCountByPatient(Long patientId) throws HmsException;
       public List<MonthlyVisitDto> getAppointmentCountByDoctor(Long doctorId) throws HmsException;

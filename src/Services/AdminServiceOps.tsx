@@ -21,9 +21,13 @@ export const addMedicineServiceAPI = async (  data: MedicineData) => {
     }
 };
 
-export const getAllMedicinesAPI= async()=>{
+export const getAllMedicinesAPI= async(page:number,size:number)=>{
       try {
-          const result=await apiConnector({method:"GET" , url:pharmacyService.GET_ALL_MEDICINES,body:null});
+          const params = new URLSearchParams();
+
+        params.append("page", String(page));
+        params.append("size", String(size));
+          const result=await apiConnector({method:"GET" , url:`${pharmacyService.GET_ALL_MEDICINES}?${params.toString()}`,body:null});
           
           console.log(result);
           return result.data;
@@ -78,11 +82,15 @@ export const updateInventoryAPI = async (  data: MedicineInventoryData) => {
 };
 
 
-export const getAllInventoryAPI = async () => {
+export const getAllInventoryAPI = async (page:number,size:number) => {
 
     try {
+                   const params = new URLSearchParams();
 
-        const result = await apiConnector({method: "GET",url: pharmacyService.GET_ALL_INVENTORY,body: null   });
+    params.append("page",String(page));
+    params.append("size",String(size));
+
+        const result = await apiConnector({method: "GET",url:`${pharmacyService.GET_ALL_INVENTORY}?${params.toString()}`,body: null   });
 
         return result.data;
 
@@ -106,10 +114,14 @@ export const createSaleAPI = async (data:any)=>{
 
 }
 
-export const getAllSalesAPI = async () => {
+export const getAllSalesAPI = async (page:number , size:number) => {
 
-    try{
-    const result = await apiConnector({method:"GET",  url:pharmacyService.GET_ALL_SALES,  body:null });
+    try{  
+           const params = new URLSearchParams();
+
+    params.append("page",String(page));
+    params.append("size",String(size));
+    const result = await apiConnector({method:"GET",  url:`${pharmacyService.GET_ALL_SALES}?${params.toString()}`,  body:null });
     console.log(result);
 
     return result.data;

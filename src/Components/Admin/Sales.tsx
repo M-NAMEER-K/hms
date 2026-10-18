@@ -5,6 +5,7 @@ import { createSaleAPI } from "../../Services/AdminServiceOps";
 import { validateSale, type SaleErrors } from "../../Utils/Validators/saleValidators";
 import { FaRegEye } from "react-icons/fa";
 import Loader from "../Common/Loader";
+import Pagination from "../Common/Pagination";
 
 
 
@@ -40,6 +41,11 @@ const [loading, setLoading] = useState<boolean>(false);
 const [showSaleDetails, setShowSaleDetails] = useState(false);
  const [selectedSale, setSelectedSale] = useState<any>(null);
 
+ const [currentPage,setCurrentPage] = useState(0);
+const [totalPages,setTotalPages] = useState(0);
+
+const pageSize = 5;
+
 useEffect(() => {
 
     const loadPageData = async () => {
@@ -63,7 +69,7 @@ useEffect(() => {
 
     loadPageData();
 
-}, []);
+}, [currentPage]);
 
 
 
@@ -79,17 +85,31 @@ const viewSaleDetails = async (sale: any) => {
 
 
 const fetchMedicines = async () => {
-    const data = await getAllMedicinesAPI();
-    setMedicines(data);
+
+    const data = await getAllMedicinesAPI(currentPage,pageSize);
+
+    setMedicines(data.content || []);
+
 };
 
 const fetchSales=async()=>{
 
-    const data=await getAllSalesAPI();
+    try{
 
-    setSales(data);
+        const data = await getAllSalesAPI( currentPage, pageSize );
+
+        setSales(data.content || []);
+
+        setTotalPages(data.totalPages || 0);
+
+    }catch(err:any){
+
+        console.log(err.response.data);
+
+        setSales([]);
+
+    }
 }
-
 const selectedMedicineIds = saleItems
     .map(item => item.medicineId)
     .filter(id => id !== "");
@@ -758,7 +778,11 @@ m=>m.id===item.medicineId
 
 )
 }
-
+   <Pagination
+    currentPage={currentPage}
+    totalPages={totalPages}
+    onPageChange={(page)=>setCurrentPage(page)}
+/>
 
         </div>
     )

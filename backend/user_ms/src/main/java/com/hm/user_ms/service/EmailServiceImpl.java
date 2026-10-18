@@ -1,6 +1,7 @@
 package com.hm.user_ms.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
@@ -15,10 +16,15 @@ public class EmailServiceImpl implements EmailService {
 private JavaMailSender mailSender;
 
 
+@Value("${frontend.url}")
+private String frontendUrl;
+
+
 @Override 
 public void sendResetPasswordEmail(String email,String token){
 
-String url ="http://localhost:5173/reset-password/"+token;
+
+    String url = frontendUrl + "/reset-password/" + token;
 
 
 SimpleMailMessage message =new SimpleMailMessage();

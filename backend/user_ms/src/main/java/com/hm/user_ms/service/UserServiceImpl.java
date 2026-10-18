@@ -177,6 +177,12 @@ userRepository.save(user);
 @Override
 public void sendOtp(UserDto userDto)throws HmsException{
 
+       Optional<User> existingUser = userRepository.findByEmail(userDto.getEmail());
+
+    if(existingUser.isPresent()){
+        throw new HmsException("USER_ALREADY_EXISTS");
+    }
+
 
 TempUser temp=new TempUser();
 

@@ -2,10 +2,12 @@ package com.hm.profile_ms.api;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -16,7 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.hm.profile_ms.dto.DoctorDropdownDto;
 import com.hm.profile_ms.dto.DoctorDto;
-
+import com.hm.profile_ms.dto.filters.DoctorFilterDto;
 import com.hm.profile_ms.exception.HmsException;
 import com.hm.profile_ms.service.DoctorService;
 
@@ -63,9 +65,9 @@ public class DoctorApi {
 }
     
 
-     @GetMapping("/getAll")
-     public ResponseEntity<List<DoctorDto>> getAllPatients() throws HmsException{
-        return new ResponseEntity<>(doctorService.getAllDoctors(),HttpStatus.OK);
+ @GetMapping("/getAll")
+public ResponseEntity<Page<DoctorDto>> getAllDoctors( @ModelAttribute DoctorFilterDto request, @RequestParam int page, @RequestParam int size) throws HmsException{
+        return new ResponseEntity<>(doctorService.getAllDoctors(request,page,size),HttpStatus.OK);
      }
 
      @GetMapping("/getProfileId/{id}")

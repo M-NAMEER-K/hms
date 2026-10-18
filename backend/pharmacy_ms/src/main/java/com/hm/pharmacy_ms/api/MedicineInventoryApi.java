@@ -11,8 +11,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
+import org.springframework.data.domain.Page;
 import com.hm.pharmacy_ms.dto.MedicineInventoryDto;
 import com.hm.pharmacy_ms.entity.MedicineInventory;
 import com.hm.pharmacy_ms.exception.HmsException;
@@ -47,7 +48,7 @@ public class MedicineInventoryApi {
       }
 
       @GetMapping("/getAll")
-       public ResponseEntity<List<MedicineInventoryDto>> getAllMedicines() throws HmsException{
-            return new ResponseEntity<>(medicineInventoryService.getAllMedicines(),HttpStatus.OK);
+       public ResponseEntity<Page<MedicineInventoryDto>> getAllMedicines(@RequestParam(defaultValue="0") int page, @RequestParam(defaultValue="5") int size) throws HmsException{
+            return new ResponseEntity<>(medicineInventoryService.getAllMedicines(page,size),HttpStatus.OK);
        }
 }

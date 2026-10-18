@@ -4,8 +4,13 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
+import org.springframework.data.domain.Page;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import com.hm.appointment_ms.clients.ProfileClient;
@@ -16,6 +21,8 @@ import com.hm.appointment_ms.dto.MonthlyVisitDto;
 import com.hm.appointment_ms.dto.PatientDto;
 import com.hm.appointment_ms.dto.ReasonCountDto;
 import com.hm.appointment_ms.dto.StatusDto;
+import com.hm.appointment_ms.dto.filters.AppointmentFilterDto;
+import com.hm.appointment_ms.dto.specification.AppointmentSpecification;
 import com.hm.appointment_ms.entity.Appointment;
 import com.hm.appointment_ms.exception.HmsException;
 import com.hm.appointment_ms.repositories.AppointmentRepository;
@@ -89,29 +96,82 @@ public class AppointmentServiceImpl implements AppointmentService{
         }
 
         @Override 
-         public List<AppointmentDetailsDto> getAllAppointmentsByPatientId(Long patientId) throws HmsException{
-                 return  appointmentRepository.findAllByPatientId(patientId).stream().map(
-                    appointment->{
-                         DoctorDto doctorDto=profileClient.getDoctorById(appointment.getDoctorId());
-                         System.out.println("Doctor DTO = " + doctorDto);
-System.out.println("Doctor Name = " + doctorDto.getName());
-                         appointment.setDoctorName(doctorDto.getName());
-                         return appointment;
-                    }
-                 ).toList();
+         public Page<AppointmentDetailsDto> getAllAppointmentsByPatientId(Long patientId ,AppointmentFilterDto request,int page,int size) throws HmsException{
+
+        Sort sort = Sort.by( Sort.Direction.valueOf(
+     request.getSortDirection() ), request.getSortBy()
+);
+
+
+Pageable pageable = PageRequest.of( page, size, sort);
+                   
+            Page<Appointment> appointments =appointmentRepository.findAll(  AppointmentSpecification.filter(request, patientId),  pageable);
+                List<AppointmentDetailsDto> updatedAppointments =appointments.getContent().stream().map(appointment -> {
+
+    DoctorDto doctorDto = profileClient.getDoctorById( appointment.getDoctorId() );
+
+
+    return new AppointmentDetailsDto(
+            appointment.getId(),
+            appointment.getPatientId(),
+            null,
+            null,
+            null,
+            appointment.getDoctorId(),
+            doctorDto.getName(),
+            appointment.getAppointmentTime(),
+            appointment.getStatus(),
+            appointment.getReason(),
+            appointment.getNotes()
+    );
+
+})
+.toList();
+                    
+                    return new PageImpl<>( updatedAppointments,pageable,appointments.getTotalElements());
          }
 
          @Override 
-         public List<AppointmentDetailsDto> getAllAppointmentsByDoctorId(Long doctorId) throws HmsException{
-           return  appointmentRepository.findAllByDoctorId(doctorId).stream().map(
-                    appointment->{
-                         PatientDto patientDto=profileClient.getPatientById(appointment.getPatientId());
-                         appointment.setPatientName(patientDto.getName());
-                         appointment.setPatientEmail(patientDto.getEmail());
-                         appointment.setPatientPhone(patientDto.getPhone());
-                         return appointment;
-                    }
-                 ).toList();
+         public Page<AppointmentDetailsDto> getAllAppointmentsByDoctorId(Long doctorId,AppointmentFilterDto request,int page,int size) throws HmsException{
+              Sort sort = Sort.by(
+        Sort.Direction.valueOf(request.getSortDirection()),
+        request.getSortBy()
+);
+
+Pageable pageable = PageRequest.of(page, size, sort);
+
+Page<Appointment> appointments = appointmentRepository.findAll(
+                AppointmentSpecification.filter(request, doctorId),
+                pageable
+        );
+
+List<AppointmentDetailsDto> updatedAppointments =
+        appointments.getContent()
+                .stream()
+                .map(appointment -> {
+
+                    PatientDto patientDto =
+                            profileClient.getPatientById(
+                                    appointment.getPatientId()
+                            );
+
+                    return new AppointmentDetailsDto(
+                            appointment.getId(),
+                            appointment.getPatientId(),
+                            patientDto.getName(),
+                            patientDto.getEmail(),
+                            patientDto.getPhone(),
+                            appointment.getDoctorId(),
+                            null,
+                            appointment.getAppointmentTime(),
+                            appointment.getStatus(),
+                            appointment.getReason(),
+                            appointment.getNotes()
+                    );
+                })
+                .toList();
+
+return new PageImpl<>( updatedAppointments, pageable, appointments.getTotalElements());
          }
 
          @Override

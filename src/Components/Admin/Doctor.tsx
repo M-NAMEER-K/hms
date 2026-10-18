@@ -2,6 +2,9 @@ import { useEffect, useState } from "react";
 import { getAllDoctorsAPI } from "../../Services/ProfileServiceOps";
 import { FaRegEye } from "react-icons/fa";
 import Loader from "../Common/Loader";
+import Filter from "../Common/Filter";
+import { doctorFilterConfig } from "../../Utils/filters/doctorFilterConfig";
+import Pagination from "../Common/Pagination";
 
 
 
@@ -28,18 +31,32 @@ const Doctor=()=>{
    
     const [showModal, setShowModal] = useState(false);
 
-   useEffect(() => {
-        loadPatients();
-    }, []);
+    const [currentPage, setCurrentPage] = useState(0);
+    const [totalPages, setTotalPages] = useState(0);
+    const pageSize = 5;
+    const [filters, setFilters] = useState({
+    departments: [],
+    specializations: [],
+    sortBy: "name",
+    sortDirection: "ASC"
+    }); 
 
-    const loadPatients = async () => {
+  useEffect(() => {
+    loadDoctors(currentPage, filters);
+}, [currentPage, filters]);
+
+   const loadDoctors = async (page: number,appliedFilters = filters) => {
         setPageLoading(true);
 
         try {
-            const data = await getAllDoctorsAPI();
+            const data = await getAllDoctorsAPI( page, pageSize, appliedFilters );
+            setDoctors(data.content || []);
+            setCurrentPage(data.number);
+            setTotalPages(data.totalPages);
+
             console.log(data);
 
-            setDoctors(Array.isArray(data) ? data : []);
+        
               }
      catch(err:any){
            console.log(err.response.data);
@@ -65,6 +82,18 @@ finally{
             <p className="text-xl font-medium text-green-500">
                 Doctors
             </p>
+            <div className="w-full flex justify-end"> 
+                       <Filter
+    config={doctorFilterConfig}
+    initialFilters={filters}
+    onApplyFilter={(newFilters)=>{
+        setFilters(newFilters);
+        setCurrentPage(0);
+    }}
+/>
+
+            </div>
+       
 
            
             {doctors.length === 0 ? (
@@ -210,7 +239,11 @@ finally{
 
     </div>
 )}
-
+     <Pagination
+    currentPage={currentPage}
+    totalPages={totalPages}
+    onPageChange={(page)=>setCurrentPage(page)}
+/>
         </div>
     );
 };

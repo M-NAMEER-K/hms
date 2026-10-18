@@ -11,8 +11,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
+import org.springframework.data.domain.Page;
 import com.hm.pharmacy_ms.dto.MedicineDto;
 import com.hm.pharmacy_ms.dto.ResponseDto;
 import com.hm.pharmacy_ms.exception.HmsException;
@@ -44,8 +45,8 @@ import lombok.RequiredArgsConstructor;
    }
 
    @GetMapping("/getAll")
-   public ResponseEntity<List<MedicineDto>>getAllMedicines() throws HmsException{
-       return new ResponseEntity<>(medicineService.getAllMedicines(),HttpStatus.OK);
+   public ResponseEntity<Page<MedicineDto>>getAllMedicines(  @RequestParam(defaultValue="0") int page, @RequestParam(defaultValue="5") int size) throws HmsException{
+       return new ResponseEntity<>(medicineService.getAllMedicines(page,size),HttpStatus.OK);
    }
 
    }

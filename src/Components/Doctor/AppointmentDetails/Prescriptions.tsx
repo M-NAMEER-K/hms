@@ -3,40 +3,83 @@ import { getAppointmentDetailsServiceAPI, getPatientPrescriptionsServiceAPI } fr
 import { FaRegEye } from "react-icons/fa";
 import { BsCapsule } from "react-icons/bs";
 import Loader from "../../Common/Loader";
+import Filter from "../../Common/Filter";
+import Pagination from "../../Common/Pagination";
+import {prescriptionFilterConfig} from "../../../Utils/filters/prescriptionFilterConfig"
 
 interface PrescriptionProps {
     appointment: any;
+
     onAppointmentSelect: (appointment: any) => void;
 }
-const Prescriptions=({appointment ,  onAppointmentSelect}:PrescriptionProps)=>{
+const Prescriptions=({appointment , onAppointmentSelect}:PrescriptionProps)=>{
    
 const [pageLoading, setPageLoading] = useState(true);
 const [prescriptions, setPrescriptions] = useState<any>(null);
 const [showMedicines, setShowMedicines] = useState(false);
 const [selectedMedicines, setSelectedMedicines] = useState<any[]>([]);
 const [selectedDate, setSelectedDate] = useState("");
+const [currentPage, setCurrentPage] = useState(0);
+const [totalPages, setTotalPages] = useState(0);
+
+const pageSize = 2;
+
+
+const [filters, setFilters] = useState({
+
+   
+
+    sortBy:"prescriptionDate",
+
+    sortDirection:"DESC"
+
+});
+
 
 const fetchPrescriptions = async () => {
+
     setPageLoading(true);
 
     try {
-        const data = await getPatientPrescriptionsServiceAPI(
-            appointment.patientId
-        );
 
-        setPrescriptions(Array.isArray(data) ? data : []);
-    } catch (error) {
+        const data = await getPatientPrescriptionsServiceAPI( appointment.patientId, currentPage, pageSize, filters  );
+      console.log("here",data);
+
+        setPrescriptions(data.content || []);
+
+        setCurrentPage(data.number);
+
+        setTotalPages(data.totalPages);
+
+
+    } catch(error){
+
         console.log(error);
-    } finally {
-        setPageLoading(false);
+
+        setPrescriptions([]);
+
     }
+    finally{
+
+        setPageLoading(false);
+
+    }
+
 };
 
 useEffect(() => {
-    if (appointment?.patientId) {
+
+    if(appointment?.patientId){
+
         fetchPrescriptions();
+
     }
-}, [appointment]);
+
+},[
+    appointment,
+    currentPage,
+    filters
+]);
 
 
 const handleView = async (appointmentId: number) => {
@@ -52,11 +95,31 @@ if (pageLoading) {
 return (
   <div className="w-full flex justify-center">
     <div className="w-[95%]">
-      <p className="text-xl font-medium text-green-500">
+        <div className="w-full flex justify-between">
+             <p className="text-xl font-medium text-green-500">
         Prescription
       </p>
 
-     {!prescriptions ? (
+<Filter
+
+config={prescriptionFilterConfig}
+
+initialFilters={filters}
+
+
+onApplyFilter={(newFilters)=>{
+
+setFilters(newFilters);
+setCurrentPage(0);
+
+}}
+
+/>
+
+</div>
+     
+
+     {prescriptions.length === 0 ? (
     <div className="flex justify-center items-center py-10 text-gray-500 font-medium">
         No Prescription Available.
     </div>
@@ -127,7 +190,7 @@ return (
 
         {/* Desktop View */}
         <div className="hidden md:block">
-            <div className="w-full mt-5 border rounded-lg overflow-hidden">
+            <div className="w-full mt-5 border rounded-lg ">
 
                 {/* Header */}
                 <div className="w-full flex bg-green-500 text-white font-semibold p-1">
@@ -188,7 +251,15 @@ return (
                 ))}
             </div>
         </div>
+             <Pagination
 
+currentPage={currentPage}
+
+totalPages={totalPages}
+
+onPageChange={(page)=>setCurrentPage(page)}
+
+/>
     </div>
 )}
     </div>
@@ -199,7 +270,7 @@ return (
 
     {showMedicines && (
     <div className="fixed inset-0 bg-black/40 flex justify-center items-center z-50">
-        <div className="bg-white rounded-lg shadow-xl w-[90%] overflow-hidden">
+       <div className="bg-white rounded-lg shadow-xl w-[90%] max-h-[85vh] overflow-hidden">
 
             {/* Header */}
             <div className="flex justify-between items-center px-5 py-3 border-b">
@@ -216,7 +287,8 @@ return (
             </div>
 
             {/* Body */}
-            <div className="w-full p-4 overflow-y-auto ">
+            {/* Body */}
+        <div className="w-full p-4 overflow-y-auto max-h-[70vh]">
 
                 {selectedMedicines.map((medicine, index) => (
                     <div
@@ -255,7 +327,8 @@ return (
             </div>
         </div>
     </div>
-)}
+)}  
+  
   </div>
 );
 }

@@ -1,6 +1,7 @@
 package com.hm.profile_ms.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import java.util.List;
 import com.hm.profile_ms.dto.DoctorDropdownDto;
@@ -8,6 +9,12 @@ import com.hm.profile_ms.dto.PatientDto;
 import com.hm.profile_ms.entity.Patient;
 import com.hm.profile_ms.exception.HmsException;
 import com.hm.profile_ms.repository.PatientRepository;
+
+
+import org.springframework.data.domain.Page;
+
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 
 @Service 
 public class PatientServiceImpl implements PatientService {
@@ -54,10 +61,15 @@ public class PatientServiceImpl implements PatientService {
                      return patientRepository.findAllPatientDropdownsByIds(ids);
         }
 
-        @Override 
-        public List<PatientDto> getAllPatients() throws HmsException{
-          return ((List<Patient>) patientRepository.findAll()).stream().map(patient -> patient.toDto()).toList();
-        }
+      @Override
+public Page<PatientDto> getAllPatients(int page, int size) throws HmsException {
+
+    Pageable pageable = PageRequest.of(page, size);
+
+    Page<Patient> patients = patientRepository.findAll(pageable);
+
+    return patients.map(Patient::toDto);
+}
 
         @Override
 public void updateProfilePicture(Long id,Long mediaId) throws HmsException {

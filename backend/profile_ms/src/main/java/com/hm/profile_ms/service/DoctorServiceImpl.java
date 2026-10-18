@@ -3,12 +3,21 @@ package com.hm.profile_ms.service;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import com.hm.profile_ms.entity.Doctor;
 import com.hm.profile_ms.dto.DoctorDropdownDto;
 import com.hm.profile_ms.dto.DoctorDto;
+import com.hm.profile_ms.dto.filters.DoctorFilterDto;
+import com.hm.profile_ms.dto.specifications.DoctorSpecification;
 import com.hm.profile_ms.exception.HmsException;
 import com.hm.profile_ms.repository.DoctorRepository;
+
+import org.springframework.data.domain.Page;
+
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 
 @Service 
 public class DoctorServiceImpl implements  DoctorService{
@@ -59,10 +68,19 @@ System.out.println("Email = " + doctorDto.getEmail());
             return doctorRepository.findAllDoctorDropdownsByIds(ids);
            }
 
-           @Override 
-            public List<DoctorDto> getAllDoctors() throws HmsException{
-              return ((List<Doctor>)doctorRepository.findAll()).stream().map(doctor -> doctor.toDto()).toList();
-            }
+          @Override
+        public Page<DoctorDto> getAllDoctors(  DoctorFilterDto request,  int page,  int size) throws HmsException {
+    Sort sort = Sort.by(  Sort.Direction.valueOf(request.getSortDirection()),  request.getSortBy() );
+
+    Pageable pageable = PageRequest.of(page, size, sort);
+
+    Page<Doctor> doctors = doctorRepository.findAll( DoctorSpecification.filter(request), pageable);
+
+    List<DoctorDto> doctorDtos = doctors.getContent().stream().map(Doctor::toDto).toList();
+
+    return new PageImpl<>( doctorDtos, pageable, doctors.getTotalElements()
+    );
+}
 
             @Override
             public void updateProfilePicture(Long id,Long mediaId) throws HmsException {

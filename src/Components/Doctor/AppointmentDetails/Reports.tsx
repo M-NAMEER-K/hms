@@ -8,6 +8,7 @@ import { FaRegTrashCan } from "react-icons/fa6";
 import { createAppointmentReportServiceAPI } from "../../../Services/AppointmentServiceOps";
 import { getAllMedicinesAPI } from "../../../Services/AdminServiceOps";
 import Loader from "../../Common/Loader";
+import { useNavigate } from "react-router-dom";
 
 interface ReportsProps{
     appointment:any;
@@ -16,7 +17,7 @@ interface ReportsProps{
 
 
 const Reports=({appointment , report}:ReportsProps)=>{
-
+console.log("rrr",report);
 
 
     const emptyMedicine :Medicine= {
@@ -28,6 +29,7 @@ const Reports=({appointment , report}:ReportsProps)=>{
     type: "",
     instructions: ""
 };
+const navigate=useNavigate();
    const reportExists = report != null;
     const [symptoms, setSymptoms] = useState<string[]>([]);
 const [tests, setTests] = useState<string[]>([]);
@@ -37,7 +39,10 @@ const [notes, setNotes] = useState<string>("");
 const [allMedicines, setAllMedicines] = useState<any[]>([]);
 
 const [medicines, setMedicines] = useState<Medicine[]>([emptyMedicine]);
-
+const [currentPage,setCurrentPage] = useState(0);
+const [totalPages,setTotalPages] = useState(0);
+const [showReportPopup, setShowReportPopup] = useState(false);
+const pageSize = 5;
 
 const [errors, setErrors] = useState<ReportErrors>({});
 const [loading , setLoading]=useState<boolean>(false);
@@ -56,8 +61,8 @@ const testOptions = testsList.map(item => ({
 
 
 useEffect(() => {
-    fetchMedicines();
-}, []);
+    fetchMedicines(currentPage);
+}, [currentPage]);
 
 
 const addMedicine = () => {
@@ -140,17 +145,22 @@ if (Object.keys(validationErrors).length > 0) {
       try{
              await createAppointmentReportServiceAPI(request);
               handleCancel();
+               navigate("/doctor/appointments");
        } finally {
         setLoading(false);
     }
 };
     
-const fetchMedicines = async () => {
+const fetchMedicines = async (page:number) => {
     setPageLoading(true);
 
     try {
-        const data = await getAllMedicinesAPI();
-        setAllMedicines(Array.isArray(data) ? data : []);
+   
+     const data = await getAllMedicinesAPI(   page,   pageSize  );
+    
+        setAllMedicines(data.content || []);
+
+        setTotalPages(data.totalPages || 0);
     } catch (error) {
         console.log(error);
     } finally {
@@ -168,6 +178,7 @@ const selectedMedicineNames = medicines
 
     return(
         <div className="w-full flex justify-center">
+            {!reportExists && (
               <div className="w-[95%] rounded-lg shadow-md p-2">
                 <p className="font-medium text-xl text-green-500">Personal Information</p>
                 <form onSubmit={handleSubmit} className="flex flex-col gap-y-2">
@@ -485,32 +496,199 @@ className="bg-green-500 hover:bg-green-600 text-white rounded-lg px-4 py-2"
 >
 Add Medicine
 </button>
-                   <div className="flex justify-center gap-3">
 
-<button
+    <div  className="flex justify-center gap-3">
+        <button
+        type="submit"
+        disabled={loading}
+        className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg"
+    >
+        {loading ? "Submitting..." : "Submit"}
+    </button>
+
+    <button
 type="button"
 onClick={handleCancel}
 className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg"
 >
 Cancel
 </button>
+    </div>
+  
 
-<button
-    type="submit"
-    disabled={loading || reportExists}
->
-    {loading
-        ? "Submitting..."
-        : reportExists
-        ? "Report Already Submitted"
-        : "Submit"}
-</button>
 
-</div>
+  
                     
                 </form>
+               
                  
-              </div>
+              </div> )}
+
+               {reportExists && (
+    <div className="flex justify-center mt-4">
+        <button
+            type="button"
+            onClick={() => setShowReportPopup(true)}
+            className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg"
+        >
+            View Report
+        </button>
+    </div>
+)}
+
+              {showReportPopup && report && (
+    <div className="fixed inset-0 bg-black/40 flex justify-center items-center z-50">
+
+        <div className="bg-white w-[90%] md:w-[70%] max-h-[85vh] rounded-lg shadow-xl">
+
+            {/* Header */}
+            <div className="flex justify-between items-center p-4 border-b">
+                <h2 className="text-xl font-semibold text-green-600">
+                    Medical Report
+                </h2>
+
+                <button
+                    onClick={() => setShowReportPopup(false)}
+                    className="text-red-500 font-bold text-xl"
+                >
+                    ✕
+                </button>
+            </div>
+
+
+            {/* Scrollable Body */}
+            <div className="p-5 overflow-y-auto max-h-[70vh] space-y-4">
+
+
+                <div>
+                    <p className="font-semibold">
+                        Symptoms
+                    </p>
+
+                    <div className="flex flex-wrap gap-2">
+                        {report.symptoms?.map((item:string,index:number)=>(
+                            <span
+                                key={index}
+                                className="bg-green-100 text-green-700 px-3 py-1 rounded-full"
+                            >
+                                {item}
+                            </span>
+                        ))}
+                    </div>
+                </div>
+
+
+
+                <div>
+                    <p className="font-semibold">
+                        Tests
+                    </p>
+
+                    <div className="flex flex-wrap gap-2">
+                        {report.tests?.map((item:string,index:number)=>(
+                            <span
+                                key={index}
+                                className="bg-blue-100 text-blue-700 px-3 py-1 rounded-full"
+                            >
+                                {item}
+                            </span>
+                        ))}
+                    </div>
+                </div>
+
+
+
+                <div>
+                    <p className="font-semibold">
+                        Diagnosis
+                    </p>
+
+                    <p className="border p-2 rounded">
+                        {report.diagnosis}
+                    </p>
+                </div>
+
+
+
+                <div>
+                    <p className="font-semibold">
+                        Referral
+                    </p>
+
+                    <p className="border p-2 rounded">
+                        {report.referral || "N/A"}
+                    </p>
+                </div>
+
+
+
+                <div>
+                    <p className="font-semibold">
+                        Notes
+                    </p>
+
+                    <p className="border p-2 rounded">
+                        {report.notes}
+                    </p>
+                </div>
+
+
+
+                <div>
+                    <p className="font-semibold text-lg text-green-600">
+                        Prescription
+                    </p>
+
+
+                    {report.prescription?.medicines?.map(
+                        (medicine:any,index:number)=>(
+                        
+                        <div
+                            key={index}
+                            className="border rounded-lg p-3 my-2"
+                        >
+
+                            <p>
+                                <b>Name:</b> {medicine.name}
+                            </p>
+
+                            <p>
+                                <b>Dosage:</b> {medicine.dosage}
+                            </p>
+
+                            <p>
+                                <b>Frequency:</b> {medicine.frequency}
+                            </p>
+
+                            <p>
+                                <b>Duration:</b> {medicine.duration} days
+                            </p>
+
+                            <p>
+                                <b>Route:</b> {medicine.route}
+                            </p>
+
+                            <p>
+                                <b>Type:</b> {medicine.type}
+                            </p>
+
+                            <p>
+                                <b>Instructions:</b> {medicine.instructions}
+                            </p>
+
+                        </div>
+
+                    ))}
+
+                </div>
+
+
+            </div>
+
+        </div>
+
+    </div>
+)}
         </div>
     )
 }

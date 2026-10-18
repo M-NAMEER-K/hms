@@ -62,10 +62,25 @@ export const getDoctorProfileServiceAPI= async (id: number) =>{
     }
 }
 
-export const getAllDoctorsAPI= async()=>{
+export const getAllDoctorsAPI = async ( page:number, size:number, filters:any)=>{
         
-    try{
-            const result=await apiConnector({method:"GET", url:profileService.GET_ALL_DOCTORS,body:null});
+    try{   
+          const params = new URLSearchParams();
+
+         params.append("page", String(page));
+         params.append("size", String(size));
+
+         filters.departments.forEach((item:string)=>{
+         params.append("departments", item);
+         });
+         filters.specializations.forEach((item:string)=>{
+         params.append("specializations", item);
+         });
+         params.append("sortBy", filters.sortBy);
+         params.append("sortDirection", filters.sortDirection);
+
+          const result = await apiConnector({ method:"GET", url:`${profileService.GET_ALL_DOCTORS}?${params.toString()}`, body:null});
+
             console.log(result);
             return result.data;
     }catch(err : any){
@@ -73,10 +88,16 @@ export const getAllDoctorsAPI= async()=>{
     }
 }
 
-export const getAllPatientsAPI= async()=>{
+export const getAllPatientsAPI= async( page:number , size:number)=>{
         
     try{
-            const result=await apiConnector({method:"GET", url:profileService.GET_ALL_PATIENTS,body:null});
+
+            const params = new URLSearchParams();
+
+         params.append("page", String(page));
+         params.append("size", String(size));
+
+            const result=await apiConnector({method:"GET", url:`${profileService.GET_ALL_PATIENTS}?${params.toString()}`,body:null});
             console.log(result);
             return result.data;
     }catch(err : any){

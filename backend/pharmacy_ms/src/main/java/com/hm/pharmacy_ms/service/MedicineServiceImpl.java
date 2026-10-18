@@ -4,8 +4,11 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
-
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.PageRequest;
 import com.hm.pharmacy_ms.dto.MedicineDto;
 import com.hm.pharmacy_ms.entity.Medicine;
 import com.hm.pharmacy_ms.exception.HmsException;
@@ -65,10 +68,15 @@ public void updateMedicine(MedicineDto medicineDto) throws HmsException {
     medicineRepository.save(existingMedicine);
 }
 
-     @Override 
-      public List<MedicineDto> getAllMedicines() throws HmsException{
-          return ((List<Medicine>) medicineRepository.findAll()).stream().map(Medicine::toDto).toList();
-      }
+@Override
+public Page<MedicineDto> getAllMedicines(int page,int size) throws HmsException{
+
+    Pageable pageable = PageRequest.of(page,size);
+
+    Page<Medicine> medicines = medicineRepository.findAll(pageable);
+
+    return medicines.map(Medicine::toDto);
+}
 
       @Override 
       public Integer getStockById(Long id) throws HmsException{

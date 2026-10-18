@@ -6,12 +6,19 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import org.springframework.data.domain.Page;
+
+
+import com.hm.appointment_ms.dto.filters.PrescriptionFilterDto;
 
 import com.hm.appointment_ms.Service.AppointmentRecordService;
 import com.hm.appointment_ms.Service.PrescriptionService;
@@ -19,6 +26,7 @@ import com.hm.appointment_ms.dto.AppointmentRecordDto;
 import com.hm.appointment_ms.dto.MedicineDto;
 import com.hm.appointment_ms.dto.PrescriptionDetailsDto;
 import com.hm.appointment_ms.dto.RecordDetailsDto;
+
 import com.hm.appointment_ms.exception.HmsException;
 import com.hm.appointment_ms.Service.MedicineService;
 import lombok.RequiredArgsConstructor;
@@ -63,9 +71,10 @@ public class AppointmentRecordApi {
         return new ResponseEntity<>(appointmentRecordService.getRecordsByPatientId(patientId),HttpStatus.OK);
        }
 
-       @GetMapping("/getPrescriptionsByPatientId/{patientId}")
-       public ResponseEntity<List<PrescriptionDetailsDto>> getPrescriptionsByPatientId(@PathVariable Long patientId) throws HmsException{
-          return new ResponseEntity<>(prescriptionService.getPrescriptionsByPatientId(patientId),HttpStatus.OK);
+     @GetMapping("/getPrescriptionsByPatientId/{patientId}")
+        public ResponseEntity<Page<PrescriptionDetailsDto>> getPrescriptionsByPatientId(@PathVariable Long patientId,@ModelAttribute PrescriptionFilterDto request,@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size) throws HmsException {
+
+           return new ResponseEntity<>( prescriptionService.getPrescriptionsByPatientId( patientId, request, page, size), HttpStatus.OK);
        }
 
        @GetMapping("/getAllPrescriptions")

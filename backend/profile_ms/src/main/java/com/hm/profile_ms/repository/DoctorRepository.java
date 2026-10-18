@@ -2,15 +2,17 @@ package com.hm.profile_ms.repository;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.CrudRepository;
+
 
 import com.hm.profile_ms.dto.DoctorDropdownDto;
 import com.hm.profile_ms.entity.Doctor;
 
 
 
-public interface DoctorRepository extends CrudRepository<Doctor , Long> {
+public interface DoctorRepository extends JpaRepository<Doctor,Long>,JpaSpecificationExecutor<Doctor> {
        Optional<Doctor> findByEmail(String email);
        Optional<Doctor> findByLicenseNumber(String licenseNumber);
        

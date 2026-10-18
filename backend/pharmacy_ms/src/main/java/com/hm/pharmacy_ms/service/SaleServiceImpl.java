@@ -8,6 +8,10 @@ import com.hm.pharmacy_ms.dto.SaleRequestDto;
 import com.hm.pharmacy_ms.entity.Medicine;
 import com.hm.pharmacy_ms.entity.MedicineInventory;
 import com.hm.pharmacy_ms.entity.Sale;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import com.hm.pharmacy_ms.entity.Sale;
@@ -65,10 +69,14 @@ public class SaleServiceImpl implements SaleService {
          public SaleDto getSaleByPrescriptionId(Long prescriptionId) throws HmsException{
              return saleRepository.findByPrescriptionId(prescriptionId).orElseThrow(() -> new HmsException("SALE_NOT_FOUND")).toDto();
          }
-    
-         @Override
-         public List<SaleDto> getAllSales( ) throws HmsException{
-     return ((List<Sale>) saleRepository.findAll()).stream().map(Sale::toDto).toList();
-         }
+    @Override
+public Page<SaleDto> getAllSales(int page, int size) throws HmsException {
+
+    Pageable pageable = PageRequest.of(page, size);
+
+    Page<Sale> sales = saleRepository.findAll(pageable);
+
+    return sales.map(Sale::toDto);
+}
         
 }

@@ -3,6 +3,7 @@ import { addInventoryAPI, getAllInventoryAPI, getAllMedicinesAPI, updateInventor
 import { validateMedicineInventory, type MedicineInventoryErrors } from "../../Utils/Validators/medicineValidators";
 import { FaRegEdit } from "react-icons/fa";
 import Loader from "../Common/Loader";
+import Pagination from "../Common/Pagination";
 
 
 
@@ -25,6 +26,11 @@ const [quantity, setQuantity] = useState<string>("");
 const [expiryDate, setExpiryDate] = useState<string>("");
 
 const [errors, setErrors] = useState<MedicineInventoryErrors>({});
+
+const [currentPage,setCurrentPage] = useState(0);
+const [totalPages,setTotalPages] = useState(0);
+
+const pageSize = 5;
 
 useEffect(() => {
 
@@ -50,12 +56,15 @@ useEffect(() => {
 
     loadData();
 
-}, []);
+}, [currentPage]);
 
 const fetchMedicines = async () => {
     try {
-        const data = await getAllMedicinesAPI();
-        setMedicines(data);
+        const medicineData = await getAllMedicinesAPI(currentPage,pageSize);
+
+setMedicines(medicineData.content || []);
+setTotalPages(medicineData.totalPages || 0);
+
     } catch(err:any){
         console.log(err.response.data);
     }
@@ -64,8 +73,10 @@ const fetchMedicines = async () => {
 
 const fetchInventory = async () => {
     try {
-        const data = await getAllInventoryAPI();
-        setInventories(data);
+      const data = await getAllInventoryAPI(currentPage,pageSize);
+
+     setInventories(data.content || []);
+     setTotalPages(data.totalPages || 0);
     } catch(err:any){
         console.log(err.response.data);
     }
@@ -460,6 +471,12 @@ if(pageLoading){
        </div>
    
 )}
+
+<Pagination
+    currentPage={currentPage}
+    totalPages={totalPages}
+    onPageChange={(page)=>setCurrentPage(page)}
+/>
 
         </div>
       )

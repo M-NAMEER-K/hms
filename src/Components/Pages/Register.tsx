@@ -57,7 +57,9 @@ if (Object.keys(validationErrors).length > 0) {
 
 }
 catch(err:any){
+
            console.log(err.response.data);
+            navigate("/login");
    
 
 }
@@ -79,13 +81,38 @@ finally{
 
                  <form onSubmit={handleSubmit} className=" max-h-[95vh] overflow-y-auto w-[95%] sm:w-[90%] md:w-[60%] lg:w-[40%] border border-gray-200 flex flex-col items-center gap-y-3  rounded-lg   p-2">
                                                     <div className="text-white text-xl font-medium">Register</div>
-                    <div className="w-full flex  items-center border border-white rounded-lg p-1">
-                             <div onClick={()=>setRole("PATIENT")} className={`w-full text-white text-center rounded-lg p-2 ${role==="PATIENT"?"bg-pink-300":"bg-none"}`}>Patient</div>
-                              <div className="text-xl bg-black border border-white rounded-lg mx-1">|</div>
-                             <div onClick={()=>setRole("DOCTOR")} className={`w-full text-white text-center rounded-lg p-2 ${role==="DOCTOR"?"bg-pink-300":"bg-none"}`}>Doctor</div>
-                              
-                           
-                      </div>
+                  <div className="w-full flex items-center border border-white rounded-lg p-1">
+
+    <div 
+        onClick={()=>setRole("PATIENT")} 
+        className={`w-full text-white text-center rounded-lg p-2 cursor-pointer ${
+            role==="PATIENT" ? "bg-pink-300" : "bg-none"
+        }`}
+    >
+        Patient
+    </div>
+
+
+    <div 
+        onClick={()=>setRole("DOCTOR")} 
+        className={`w-full text-white text-center rounded-lg p-2 cursor-pointer ${
+            role==="DOCTOR" ? "bg-pink-300" : "bg-none"
+        }`}
+    >
+        Doctor
+    </div>
+
+
+    <div 
+        onClick={()=>setRole("ADMIN")} 
+        className={`w-full text-white text-center rounded-lg p-2 cursor-pointer ${
+            role==="ADMIN" ? "bg-pink-300" : "bg-none"
+        }`}
+    >
+        Admin
+    </div>
+
+</div>
 
                       <div className=" flex flex-col w-full ">
                       <label className="text-sm" >Name</label>
