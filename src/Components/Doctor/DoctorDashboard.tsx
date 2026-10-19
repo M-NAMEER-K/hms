@@ -20,10 +20,10 @@ const DoctorDashboard = () => {
 
    const user = useSelector((state: RootState) => state.user);
     
-         const [currentPage, setCurrentPage] = useState(0);
-           const [totalPages, setTotalPages] = useState(0);
+         const [currentPage] = useState(0);
+           const [, setTotalPages] = useState(0);
            const pageSize = 5;
-  const [filters,setFilters] = useState({
+  const [filters] = useState({
     
     status:[],
     fromDate:"",

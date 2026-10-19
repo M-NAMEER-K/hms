@@ -38,7 +38,7 @@ const PatientAppointment=()=>{
       const [selectedAppointment,setSelectedAppointment] = useState<any>(null);
 const [selectedReport,setSelectedReport] = useState<any>(null);
 const [showReport,setShowReport] = useState(false);
-const [reportLoading,setReportLoading] = useState(false);
+const [,setReportLoading] = useState(false);
 
     const [currentPage, setCurrentPage] = useState(0);
     const [totalPages, setTotalPages] = useState(0);

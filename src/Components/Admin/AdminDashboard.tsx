@@ -13,8 +13,8 @@ import Loader from "../Common/Loader";
 
 const AdminDashboard=()=>{
 
-const [currentPage, setCurrentPage] = useState(0);
-    const [totalPages, setTotalPages] = useState(0);
+const [currentPage] = useState(0);
+    const [, setTotalPages] = useState(0);
     const pageSize = 5;
 
 const [doctors,setDoctors] = useState<any[]>([]);
@@ -22,7 +22,7 @@ const [patients,setPatients] = useState<any[]>([]);
 
 const [medicines,setMedicines] = useState<any[]>([]);
 const [pageLoading, setPageLoading] = useState(true);
-  const [filters, setFilters] = useState({
+  const [filters] = useState({
     departments: [],
     specializations: [],
     sortBy: "name",

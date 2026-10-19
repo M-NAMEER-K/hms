@@ -15,10 +15,10 @@ const PatientDashboard = () => {
     const [appointments,setAppointments] = useState<any[]>([]);
     const [medicines,setMedicines] = useState<any[]>([]);
     const [pageLoading, setPageLoading] = useState<boolean>(true);
-      const [currentPage, setCurrentPage] = useState(0);
-        const [totalPages, setTotalPages] = useState(0);
+      const [currentPage] = useState(0);
+        const [, setTotalPages] = useState(0);
         const pageSize = 2;
-        const [filters,setFilters] = useState({
+        const [filters] = useState({
     
     status:[],
     fromDate:"",
@@ -28,7 +28,7 @@ const PatientDashboard = () => {
     
     });
 
-    const [medicineFilter,setMedicineFilter]=useState( {
+    const [medicineFilter]=useState( {
             sortBy:"prescriptionDate",
             sortDirection:"DESC"
         });

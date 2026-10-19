@@ -39,8 +39,8 @@ const [notes, setNotes] = useState<string>("");
 const [allMedicines, setAllMedicines] = useState<any[]>([]);
 
 const [medicines, setMedicines] = useState<Medicine[]>([emptyMedicine]);
-const [currentPage,setCurrentPage] = useState(0);
-const [totalPages,setTotalPages] = useState(0);
+const [currentPage] = useState(0);
+const [,setTotalPages] = useState(0);
 const [showReportPopup, setShowReportPopup] = useState(false);
 const pageSize = 5;
 
