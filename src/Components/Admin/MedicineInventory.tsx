@@ -4,6 +4,8 @@ import { validateMedicineInventory, type MedicineInventoryErrors } from "../../U
 import { FaRegEdit } from "react-icons/fa";
 import Loader from "../Common/Loader";
 import Pagination from "../Common/Pagination";
+import type { ApiError } from "../Common/ErrorModal";
+import ErrorModal from "../Common/ErrorModal";
 
 
 
@@ -26,11 +28,29 @@ const [quantity, setQuantity] = useState<string>("");
 const [expiryDate, setExpiryDate] = useState<string>("");
 
 const [errors, setErrors] = useState<MedicineInventoryErrors>({});
-
+const [apiErrors,setApiErrors] = useState<ApiError[]>([]);
 const [currentPage,setCurrentPage] = useState(0);
 const [totalPages,setTotalPages] = useState(0);
 
 const pageSize = 5;
+
+
+const handleApiError = (err:any)=>{
+
+    setApiErrors(prev=>[
+        ...prev,
+        {
+            id:Date.now(),
+            status:err.response?.status,
+            message:
+            err.response?.data?.errorMessage ||
+            err.response?.data?.message ||
+            err.message ||
+            "Something went wrong"
+        }
+    ]);
+
+};
 
 useEffect(() => {
 
@@ -129,51 +149,45 @@ const handleSubmit = async (
 
     setLoading(true);
   
-  try {
-  
-     if (editingId) {
-          setLoading(true);
-          try {
-                    await updateInventoryAPI({
-        id: editingId,
-        medicineId: Number(medicineId),
-        batchNumber,
-        quantity: Number(quantity),
-        expiryDate,
-    });
-          }  catch(err:any){
-           console.log(err.response.data);
-   
+ try {
 
-}
-finally{
+    if(editingId !== null){
+
+        await updateInventoryAPI({
+            id: editingId,
+            medicineId:Number(medicineId),
+            batchNumber,
+            quantity:Number(quantity),
+            expiryDate
+        });
+
+    }else{
+
+        await addInventoryAPI({
+            medicineId:Number(medicineId),
+            batchNumber,
+            quantity:Number(quantity),
+            expiryDate
+        });
+
+    }
+
+
+    await fetchInventory();
+
+    resetForm();
+    setShowForm(false);
+
+
+}catch(err:any){
+
+    handleApiError(err);
+
+}finally{
 
     setLoading(false);
-};
-
-    
-
-} else {
-
-    await addInventoryAPI({
-        medicineId: Number(medicineId),
-        batchNumber,
-        quantity: Number(quantity),
-        expiryDate,
-    });
 
 }
-    
-      await fetchInventory();
-  
-      resetForm();
-      setShowForm(false);
-  
-  } catch (err) {
-      console.log(err);
-  } finally {
-      setLoading(false);
-  }
   }
   
 if(pageLoading){
@@ -182,7 +196,8 @@ if(pageLoading){
 
       return(
         <div className="w-screen h-screen p-2">
-                  
+                     
+                     <ErrorModal errors={apiErrors}   onClose={()=>setApiErrors([])}/>
                    <button onClick={() => setShowForm(true)}
           className="bg-green-500 hover:bg-green-600 text-white flex items-center gap-2 px-4 py-2 rounded-lg" >
           

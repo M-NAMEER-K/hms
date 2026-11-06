@@ -87,4 +87,10 @@ public class AppointmentRecordApi {
              return new ResponseEntity<>(medicineService.getAllMedicinesByPrescriptionId(prescriptionId),HttpStatus.OK);
        }
 
+       @GetMapping("/patient/{patientId}/prescription/{prescriptionId}")
+public ResponseEntity<PrescriptionDetailsDto> getPrescription( @PathVariable Long patientId, @PathVariable Long prescriptionId) throws HmsException {
+
+    return ResponseEntity.ok(  prescriptionService.getPrescriptionByPatientAndPrescription(  patientId,  prescriptionId  )  );
+}
+
 }

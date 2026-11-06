@@ -17,7 +17,7 @@ import PatientDashboard from './Components/Patient/PatientDashboard'
 import NotFound from './Components/Pages/NotFound'
 import PatientProfile from './Components/Patient/PatientProfile'
 import DoctorProfile from './Components/Doctor/DoctorProfile'
-import PatientAppointment from './Components/Patient/PatientAppointment'
+import PatientAppointment from './Components/Patient/Appointment/PatientAppointment'
 import AppointmentDetails from './Components/Doctor/AppointmentDetails/AppointmentDetails'
 import DoctorAppointment from './Components/Doctor/DoctorAppointment'
 import Medicine from './Components/Admin/Medicine'
@@ -28,6 +28,8 @@ import Doctor from './Components/Admin/Doctor'
 import ForgotPassword from './Components/Common/ForgotPassword'
 import ResetPassword from './Components/Common/ResetPassword'
 import VerifyOtp from './Components/Common/VerifyOtp'
+import PatientPaymentHistory from './Components/Patient/PatientPaymentHistory'
+import AppointmentLayout from './Components/Patient/Appointment/AppointmentLayout'
 
 
 
@@ -75,7 +77,8 @@ function App() {
        <Route path="/patient" element={<PatientLayout/> } >
          <Route index element={<PatientDashboard/>}/> 
          <Route path="profile" element={<PatientProfile/>} />
-         <Route path="appointments" element={<PatientAppointment/>}/>
+         <Route path="appointments" element={<AppointmentLayout/>}/>
+         <Route path="payments" element={<PatientPaymentHistory/>}/>
        </Route>
     </Route>
      

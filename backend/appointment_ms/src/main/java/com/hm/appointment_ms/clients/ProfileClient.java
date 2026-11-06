@@ -8,12 +8,13 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import com.hm.appointment_ms.config.FeignClientInterceptor;
+import com.hm.appointment_ms.config.FeignErrorDecoder;
 import com.hm.appointment_ms.dto.DoctorDto;
 import com.hm.appointment_ms.dto.DoctorName;
 import com.hm.appointment_ms.dto.PatientDto;
 import com.hm.appointment_ms.exception.HmsException;
 
-@FeignClient(name="profile-ms",url="${profile-ms.url}",configuration={FeignClientInterceptor.class})
+@FeignClient(name="profile-ms",url="${profile-ms.url}",configuration={FeignClientInterceptor.class,FeignErrorDecoder.class})
 public interface ProfileClient {
     
 

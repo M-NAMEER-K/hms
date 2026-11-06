@@ -35,9 +35,10 @@ public class Appointment {
     private StatusDto status;
     private String reason;
     private String notes;
+    private String referenceId;
 
     public AppointmentDto toDto(){
-           return new AppointmentDto(this.id,this.patientId,this.doctorId,this.appointmentTime,this.status,this.reason,this.notes);
+           return new AppointmentDto(this.id,this.patientId,this.doctorId,this.appointmentTime,this.status,this.reason,this.notes,this.referenceId);
     }
     public Appointment (Long id){
         this.id=id;

@@ -20,10 +20,12 @@ public class SaleDto {
     private Long prescriptionId;
     private String buyerName;
     private String buyerContact;
+    private String doctorName;
+    private String patientName;
     private LocalDateTime saleDate;
     private Double totalAmount;
 
     public Sale toEntity(){
-         return new Sale(id , prescriptionId,buyerName,buyerContact , saleDate , totalAmount);
+         return new Sale(id , prescriptionId,buyerName,buyerContact,doctorName,patientName , saleDate , totalAmount);
     }
 }

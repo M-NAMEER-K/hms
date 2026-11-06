@@ -10,6 +10,7 @@ interface AppointmentPageResponse {
 
 export const scheduleAppointmentServiceAPI = async (data: any) => {
     try{
+         console.log(data);
         const result = await apiConnector({method: "POST",url: appointmentService.SCHEDULE,body: data});
         console.log(result);
 
@@ -265,4 +266,19 @@ export const getAppointmentReasonsByPatientServiceAPI = async (patientId: number
          throw err;
     }
     
+};
+
+
+export const getPatientPrescriptionByPatientAndPrescriptionAPI = async (   patientId: number,   prescriptionId: number) => {
+    try {
+
+        const requiredUrl = appointmentService.GET_PRESCRIPTION_BY_PATIENT_ID_AND_PRESCRIPTION_ID.replace("{patientId}", String(patientId)).replace("{prescriptionId}", String(prescriptionId));
+
+        const response = await apiConnector({  method: "GET", url:requiredUrl, body: null, });
+
+        return response.data;
+
+    } catch (err: any) {
+        throw err;
+    }
 };

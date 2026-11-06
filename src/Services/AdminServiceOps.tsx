@@ -102,7 +102,7 @@ export const getAllInventoryAPI = async (page:number,size:number) => {
 export const createSaleAPI = async (data:any)=>{
 
     try{
-
+      console.log("createSale",data);
         const result = await apiConnector({method:"POST",url:pharmacyService.CREATE_SALE,body:data  });
 
         return result.data;
@@ -139,8 +139,9 @@ export const getSaleItemsAPI = async (saleId:number)=>{
               console.log(result);
         return result.data;
 
-    }catch(err){
+    }catch(err:any){
       throw err;
     }
 
 }
+

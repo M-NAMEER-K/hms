@@ -27,25 +27,15 @@ export const uploadProfileImageAPI = async(file:File)=>{
     }
 }
 
-
-
 export const getProfileImageAPI = async(id:number)=>{
 
-    try{
+    const result = await apiConnector({
+        method:"GET",
+        url:`${mediaService.GET_FILE}/${id}`,
+        body:null
+    });
 
-        const result = await apiConnector({ method:"GET",url:`${mediaService.GET_FILE}/${id}`,body:null,responseType:"blob"});
-
-
-        const imageUrl = URL.createObjectURL(result.data);
-
-        return imageUrl;
-
-    }
-    catch(err){
-
-      throw err;
-
-    }
+    return result.data;
 
 }
 
@@ -62,5 +52,32 @@ catch(err){
 throw err;
 
 }
+
+}
+
+export const replaceProfileImageAPI = async(   oldMediaId:number,   file:File)=>{
+
+    try{
+
+        const formData = new FormData();
+
+        formData.append("file",file);
+
+
+        const result = await apiConnector({ method:"PUT", url:`${mediaService.REPLACE_FILE}/${oldMediaId}`, body:formData,
+            headers:{
+                "Content-Type":"multipart/form-data"
+            }
+        });
+
+
+        return result.data;
+
+    }
+    catch(err:any){
+
+        throw err;
+
+    }
 
 }

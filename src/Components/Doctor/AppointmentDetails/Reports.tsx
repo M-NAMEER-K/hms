@@ -9,6 +9,8 @@ import { createAppointmentReportServiceAPI } from "../../../Services/Appointment
 import { getAllMedicinesAPI } from "../../../Services/AdminServiceOps";
 import Loader from "../../Common/Loader";
 import { useNavigate } from "react-router-dom";
+import type { ApiError } from "../../Common/ErrorModal";
+import ErrorModal from "../../Common/ErrorModal";
 
 interface ReportsProps{
     appointment:any;
@@ -31,6 +33,8 @@ console.log("rrr",report);
 };
 const navigate=useNavigate();
    const reportExists = report != null;
+
+   const [apiErrors,setApiErrors] = useState<ApiError[]>([]);
     const [symptoms, setSymptoms] = useState<string[]>([]);
 const [tests, setTests] = useState<string[]>([]);
 const [diagnosis, setDiagnosis] = useState<string>("");
@@ -75,6 +79,23 @@ const removeMedicine = (index: number) => {
   setMedicines(temp);
 };
 
+
+const handleApiError = (err:any)=>{
+
+    setApiErrors(prev=>[
+        ...prev,
+        {
+            id:Date.now(),
+            status:err.response?.status,
+            message:
+            err.response?.data?.errorMessage ||
+            err.response?.data?.message ||
+            err.message ||
+            "Something went wrong"
+        }
+    ]);
+
+};
 
 const handleCancel=()=>{
 
@@ -142,13 +163,17 @@ if (Object.keys(validationErrors).length > 0) {
 
     
        setLoading(true);
-      try{
-             await createAppointmentReportServiceAPI(request);
-              handleCancel();
-               navigate("/doctor/appointments");
-       } finally {
-        setLoading(false);
-    }
+     try{
+    await createAppointmentReportServiceAPI(request);
+    handleCancel();
+    navigate("/doctor/appointments");
+
+} catch(error){
+    console.log(error);
+    handleApiError(error);
+} finally {
+    setLoading(false);
+}
 };
     
 const fetchMedicines = async (page:number) => {
@@ -178,6 +203,9 @@ const selectedMedicineNames = medicines
 
     return(
         <div className="w-full flex justify-center">
+
+             <ErrorModal errors={apiErrors} onClose={()=>setApiErrors([])} />
+
             {!reportExists && (
               <div className="w-[95%] rounded-lg shadow-md p-2">
                 <p className="font-medium text-xl text-green-500">Personal Information</p>

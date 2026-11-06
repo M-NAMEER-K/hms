@@ -18,6 +18,7 @@ import jakarta.transaction.Transactional;
 
 import com.hm.user_ms.exception.HmsException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 
 import com.hm.user_ms.entity.TempUser;
 import  com.hm.user_ms.entity.User;
@@ -49,10 +50,10 @@ public class UserServiceImpl implements UserService {
     public void registerUser(UserDto userDto) throws HmsException{
           Optional<User> opt=userRepository.findByEmail(userDto.getEmail());
             if(opt.isPresent()){
-                throw new HmsException("User_Already_Exception");
+                throw new HmsException( "USER_ALREADY_EXISTS",HttpStatus.CONFLICT);
             }
             if (!userDto.getPassword().equals(userDto.getConfirmPassword())) {
-        throw new HmsException("PASSWORD_MISMATCH");
+       throw new HmsException( "PASSWORD_MISMATCH", HttpStatus.BAD_REQUEST);
     }
             userDto.setPassword(passwordEncoder.encode(userDto.getPassword()));
              Long profileId=null;
@@ -70,21 +71,24 @@ public class UserServiceImpl implements UserService {
              userRepository.save(userDto.toEntity());
     }
     
-    @Override
-    public UserDto loginUser(UserDto userDto) throws HmsException{
-        User user=userRepository.findById(userDto.getId()).orElseThrow(()->new HmsException("USER_NOT_FOUND"));
-        
+  @Override
+public UserDto loginUser(String email, String password) throws HmsException {
 
-        if(!passwordEncoder.matches(userDto.getPassword() , user.getPassword())){
-               throw new HmsException("INVALID_CREDENTIALS");
-        }
-        user.setPassword(null);
-        return user.toDto();
+    User user = userRepository.findByEmail(email).orElseThrow(() -> new HmsException( "USER_NOT_FOUND",  HttpStatus.NOT_FOUND));
+
+
+    if(!passwordEncoder.matches(password, user.getPassword())){
+
+        throw new HmsException(  "WRONG_PASSWORD",  HttpStatus.BAD_REQUEST);
     }
+
+
+    return user.toDto();
+}
     
     @Override
     public UserDto getUserById(Long id) throws HmsException{
-           return userRepository.findById(id).orElseThrow(()->new HmsException("USER_NOT_FOUND")).toDto();
+           return userRepository.findById(id).orElseThrow(()->new HmsException( "USER_NOT_FOUND",  HttpStatus.NOT_FOUND)).toDto();
     }
 
     @Override
@@ -94,19 +98,19 @@ public class UserServiceImpl implements UserService {
 
       @Override
       public UserDto getUser(String email) throws HmsException{
-          return userRepository.findByEmail(email).orElseThrow(()->new HmsException("USER_NOT_FOUND")).toDto();
+          return userRepository.findByEmail(email).orElseThrow(()->new HmsException( "USER_NOT_FOUND",  HttpStatus.NOT_FOUND)).toDto();
       }
 
       @Override 
       public Long getProfile(Long id) throws HmsException{
-           User user=userRepository.findById(id).orElseThrow(()->new HmsException("USER_NOT_FOUND"));
+           User user=userRepository.findById(id).orElseThrow(()->new HmsException( "USER_NOT_FOUND",  HttpStatus.NOT_FOUND));
            if(user.getRole().equals(Roles.DOCTOR)){
              return profileClient.getDoctor(id);
            }
            else if(user.getRole().equals(Roles.PATIENT)){
             return profileClient.getPatient(id);
            }
-           throw new HmsException("INVALID_USER_ROLE");
+           throw new HmsException("INVALID_USER_ROLE",HttpStatus.BAD_REQUEST);
       }
 
       @Override 
@@ -121,7 +125,7 @@ public class UserServiceImpl implements UserService {
 public void generateResetToken(String email) throws HmsException{
 
 
-User user =userRepository.findByEmail(email).orElseThrow(()->new HmsException("USER_NOT_FOUND")
+User user =userRepository.findByEmail(email).orElseThrow(()->new HmsException("USER_NOT_FOUND",  HttpStatus.NOT_FOUND)
 );
 
 
@@ -148,12 +152,12 @@ emailService.sendResetPasswordEmail(email,token);
 public void resetPassword(String token,String password) throws HmsException{
 
 
-User user =userRepository.findByResetToken(token).orElseThrow(()->new HmsException("INVALID_TOKEN"));
+User user =userRepository.findByResetToken(token).orElseThrow(()->new HmsException(  "INVALID_TOKEN",  HttpStatus.BAD_REQUEST));
 
 
 
 if(user.getResetTokenExpiry().isBefore(LocalDateTime.now())){
-    throw new HmsException("RESET_LINK_EXPIRED");
+    throw new HmsException("RESET_LINK_EXPIRED",  HttpStatus.BAD_REQUEST);
 
 }
 
@@ -180,7 +184,7 @@ public void sendOtp(UserDto userDto)throws HmsException{
        Optional<User> existingUser = userRepository.findByEmail(userDto.getEmail());
 
     if(existingUser.isPresent()){
-        throw new HmsException("USER_ALREADY_EXISTS");
+       throw new HmsException(  "USER_ALREADY_EXISTS",  HttpStatus.CONFLICT);
     }
 
 
@@ -213,16 +217,16 @@ emailService.sendOtpEmail(userDto.getEmail(),otp);
 @Override
 public void verifyOtp(VerifyOtpDto dto)throws HmsException{
 
-    TempUser temp=tempUserRepository.findByEmail(dto.getEmail()).orElseThrow(()->new HmsException("USER_NOT_FOUND"));
+    TempUser temp=tempUserRepository.findByEmail(dto.getEmail()).orElseThrow(()->new HmsException( "USER_NOT_FOUND", HttpStatus.NOT_FOUND));
 
 
     if(temp.getOtpExpiry().isBefore(LocalDateTime.now())){
-        throw new HmsException("OTP_EXPIRED");
+        throw new HmsException("OTP_EXPIRED",HttpStatus.BAD_REQUEST);
     }
 
 
     if(!temp.getOtp().equals(dto.getOtp())){
-        throw new HmsException("INVALID_OTP");
+        throw new HmsException("INVALID_OTP",HttpStatus.BAD_REQUEST);
     }
 
 
@@ -274,7 +278,7 @@ public void verifyOtp(VerifyOtpDto dto)throws HmsException{
  public void resendOtp(String email) throws HmsException{
 
         TempUser temp = tempUserRepository.findByEmail(email)
-            .orElseThrow(() -> new HmsException("USER_NOT_FOUND"));
+            .orElseThrow(() -> new HmsException("USER_NOT_FOUND",HttpStatus.NOT_FOUND));
 
 
     String otp = String.valueOf((int)(Math.random()*900000)+100000);

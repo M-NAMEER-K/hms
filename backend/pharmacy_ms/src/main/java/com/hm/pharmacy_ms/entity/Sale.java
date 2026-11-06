@@ -27,6 +27,8 @@ public class Sale {
     private Long prescriptionId;
     private String buyerName;
     private String buyerContact;
+    private String doctorName;
+    private String patientName;
     private LocalDateTime saleDate;
     private Double totalAmount;
 
@@ -35,6 +37,6 @@ public class Sale {
     }
 
     public SaleDto toDto(){
-        return new SaleDto(id , prescriptionId ,buyerName, buyerContact, saleDate , totalAmount);
+        return new SaleDto(id , prescriptionId ,buyerName, buyerContact,doctorName,patientName, saleDate , totalAmount);
     }
 }

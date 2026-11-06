@@ -8,6 +8,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.data.domain.PageRequest;
 import com.hm.pharmacy_ms.dto.MedicineDto;
 import com.hm.pharmacy_ms.entity.Medicine;
@@ -27,7 +28,7 @@ public class MedicineServiceImpl implements MedicineService{
         Optional<Medicine> optional= medicineRepository.findByNameIgnoreCaseAndDosageIgnoreCase(medicineDto.getName(),medicineDto.getDosage());
          
         if(optional.isPresent()){
-            throw new HmsException("MEDICINE_ALREADY_EXISTS");
+            throw new HmsException("MEDICINE_ALREADY_EXISTS", HttpStatus.CONFLICT);
         }
         medicineDto.setStock(0);
         medicineDto.setCreatedAt(LocalDateTime.now());
@@ -36,14 +37,14 @@ public class MedicineServiceImpl implements MedicineService{
 
    @Override 
     public MedicineDto getMedicineById(Long id) throws HmsException{
-          return medicineRepository.findById(id).orElseThrow(()-> new HmsException("MEDICINE_NOT_FOUND")).toDto();
+          return medicineRepository.findById(id).orElseThrow(()-> new HmsException("MEDICINE_NOT_FOUND",  HttpStatus.NOT_FOUND)).toDto();
     }
 
  @Override
 public void updateMedicine(MedicineDto medicineDto) throws HmsException {
 
     Medicine existingMedicine = medicineRepository.findById(medicineDto.getId())
-            .orElseThrow(() -> new HmsException("MEDICINE_NOT_FOUND"));
+            .orElseThrow(() -> new HmsException("MEDICINE_NOT_FOUND",  HttpStatus.NOT_FOUND));
 
     if (!(medicineDto.getName().equalsIgnoreCase(existingMedicine.getName())
             && medicineDto.getDosage().equalsIgnoreCase(existingMedicine.getDosage()))) {
@@ -54,7 +55,7 @@ public void updateMedicine(MedicineDto medicineDto) throws HmsException {
                         medicineDto.getDosage());
 
         if (optional.isPresent()) {
-            throw new HmsException("MEDICINE_ALREADY_EXISTS");
+            throw new HmsException("MEDICINE_ALREADY_EXISTS", HttpStatus.CONFLICT);
         }
     }
 
@@ -80,12 +81,12 @@ public Page<MedicineDto> getAllMedicines(int page,int size) throws HmsException{
 
       @Override 
       public Integer getStockById(Long id) throws HmsException{
-         return medicineRepository.findStockById(id).orElseThrow(()-> new HmsException("MEDICINE_NOT_FOUND"));
+         return medicineRepository.findStockById(id).orElseThrow(()-> new HmsException("MEDICINE_NOT_FOUND", HttpStatus.NOT_FOUND));
       }
 
       @Override 
         public Integer addStock(Long id, Integer quantity) throws HmsException{
-            Medicine medicine=medicineRepository.findById(id).orElseThrow(()-> new HmsException("MEDICINE_NOT_FOUND"));
+            Medicine medicine=medicineRepository.findById(id).orElseThrow(()-> new HmsException("MEDICINE_NOT_FOUND", HttpStatus.NOT_FOUND));
             medicine.setStock(medicine.getStock()!=null ? medicine.getStock() + quantity :quantity );
 
             medicineRepository.save(medicine);
@@ -94,7 +95,7 @@ public Page<MedicineDto> getAllMedicines(int page,int size) throws HmsException{
 
         @Override 
         public Integer removeStock(Long id , Integer quantity) throws HmsException{
-                   Medicine medicine=medicineRepository.findById(id).orElseThrow(()-> new HmsException("MEDICINE_NOT_FOUND"));
+                   Medicine medicine=medicineRepository.findById(id).orElseThrow(()-> new HmsException("MEDICINE_NOT_FOUND", HttpStatus.NOT_FOUND));
             medicine.setStock(medicine.getStock()!=null ? medicine.getStock() - quantity :quantity );
 
             medicineRepository.save(medicine);

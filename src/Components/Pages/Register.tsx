@@ -5,12 +5,13 @@ import { useState } from "react";
 import { validateRegister } from "../../Utils/Validators/authValidators";
 import {  sendOtpAPI } from "../../Services/UserServiceOps";
 import { FaRegEye, FaRegEyeSlash } from "react-icons/fa";
+import ErrorModal, { type ApiError } from "../Common/ErrorModal";
 
 
 const Register=()=>{
   const navigate=useNavigate();
   const [loading, setLoading] = useState<boolean>(false);
-
+    const [apiErrors, setApiErrors] = useState<ApiError[]>([]);
     const [role, setRole] = useState<"PATIENT" | "DOCTOR" | "ADMIN">("PATIENT");
     const [name,setName]=useState<string>("");
     const [email, setEmail] = useState<string>("");
@@ -58,8 +59,18 @@ if (Object.keys(validationErrors).length > 0) {
 }
 catch(err:any){
 
-           console.log(err.response.data);
-            navigate("/login");
+          const apiError: ApiError = {
+        id: Date.now(),
+      
+        status: err.response?.status,
+        message:
+          err.response?.data?.errorMessage 
+          || "Something went wrong"
+    };
+
+
+    setApiErrors([apiError]);
+           
    
 
 }
@@ -76,7 +87,7 @@ finally{
   <div className="w-screen min-h-screen flex justify-center items-center bg-center bg-no-repeat bg-[length:100%_100%] sm:bg-[length:70%_70%] md:bg-[length:100%_100%] lg:bg-cover"
   style={{backgroundImage:`url(${logReg})`}}>
                      
-                      
+                    <ErrorModal errors={apiErrors} onClose={()=>setApiErrors([])}/>  
 
 
                  <form onSubmit={handleSubmit} className=" max-h-[95vh] overflow-y-auto w-[95%] sm:w-[90%] md:w-[60%] lg:w-[40%] border border-gray-200 flex flex-col items-center gap-y-3  rounded-lg   p-2">

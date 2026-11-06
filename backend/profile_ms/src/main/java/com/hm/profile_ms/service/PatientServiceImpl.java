@@ -15,6 +15,7 @@ import org.springframework.data.domain.Page;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
 
 @Service 
 public class PatientServiceImpl implements PatientService {
@@ -26,11 +27,11 @@ public class PatientServiceImpl implements PatientService {
     @Override
      public Long addPatient(PatientDto patientDto) throws HmsException{
           if(patientDto.getEmail()!=null && patientRepository.findByEmail(patientDto.getEmail()).isPresent()) {
-                  throw new HmsException("PATIENT_ALREADY_EXISTS");
+                  throw new HmsException("PATIENT_ALREADY_EXISTS", HttpStatus.CONFLICT);
                   
           }
           if(patientDto.getAadharNumber()!=null && patientRepository.findByAadharNumber(patientDto.getAadharNumber()).isPresent()) {
-                  throw new HmsException("PATIENT_ALREADY_EXISTS");
+                  throw new HmsException("PATIENT_ALREADY_EXISTS", HttpStatus.CONFLICT);
                   
           }
          return patientRepository.save(patientDto.toEntity()).getId(); 
@@ -41,14 +42,12 @@ public class PatientServiceImpl implements PatientService {
 
      @Override 
          public PatientDto getPatientById(Long id) throws HmsException{
-               return patientRepository.findById(id).orElseThrow(()-> new HmsException(
-                "PATIENT_NOT_FOUND"
-               )).toDto();
+               return patientRepository.findById(id).orElseThrow(()-> new HmsException(   "PATIENT_NOT_FOUND",  HttpStatus.NOT_FOUND    )).toDto();
          }
 
    @Override
        public PatientDto updatePatient(PatientDto patientDto) throws HmsException{
-                patientRepository.findById(patientDto.getId()).orElseThrow(()->new HmsException("PATIENT_NOT_FOUND")).toDto();
+                patientRepository.findById(patientDto.getId()).orElseThrow(()->new HmsException("PATIENT_NOT_FOUND",  HttpStatus.NOT_FOUND)).toDto();
                 return patientRepository.save(patientDto.toEntity()).toDto();
        }
        @Override 
@@ -74,7 +73,7 @@ public Page<PatientDto> getAllPatients(int page, int size) throws HmsException {
         @Override
 public void updateProfilePicture(Long id,Long mediaId) throws HmsException {
 
-    Patient patient=patientRepository.findById(id).orElseThrow(()->new HmsException("PATIENT_NOT_FOUND"));
+    Patient patient=patientRepository.findById(id).orElseThrow(()->new HmsException("PATIENT_NOT_FOUND",  HttpStatus.NOT_FOUND));
 
     patient.setProfilePictureId(mediaId);
      patientRepository.save(patient);

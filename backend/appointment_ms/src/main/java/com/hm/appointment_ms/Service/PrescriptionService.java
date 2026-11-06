@@ -17,4 +17,5 @@ public interface PrescriptionService {
        public Page<PrescriptionDetailsDto> getPrescriptionsByPatientId( Long patientId, PrescriptionFilterDto request, int page, int size) throws HmsException;
        public List<PrescriptionDetailsDto>  getPrescriptions() throws HmsException;
        public List<MedicineDto> getMedicineByPatientId(Long patientId) throws HmsException;
+       public PrescriptionDetailsDto getPrescriptionByPatientAndPrescription(     Long patientId,     Long prescriptionId) throws HmsException;
 }

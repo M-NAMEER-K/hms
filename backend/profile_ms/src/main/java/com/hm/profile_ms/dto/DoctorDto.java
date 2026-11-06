@@ -1,8 +1,10 @@
 package com.hm.profile_ms.dto;
 
 import java.time.LocalDate;
+import java.util.List;
 
 import com.hm.profile_ms.entity.Doctor;
+import com.hm.profile_ms.entity.DoctorAvailability;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.GeneratedValue;
@@ -35,9 +37,15 @@ public class DoctorDto {
     private String specialization;
     private String department;
     private Integer totalExp;
+  
+    private Integer consultationFees;
+    private String currency;
+
+    private List<DoctorAvailability> availability;
+    
 
     public Doctor toEntity(){
     return new Doctor(this.id,this.name,this.email,this.phone,this.dob,this.profilePictureId,this.address,this.licenseNumber,
-         this.specialization,this.department,this.totalExp);
+         this.specialization,this.department,this.totalExp ,  this.consultationFees,this.currency,   this.availability);
     }
 }

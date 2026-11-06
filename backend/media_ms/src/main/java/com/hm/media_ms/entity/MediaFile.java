@@ -5,10 +5,12 @@ import java.time.LocalDateTime;
 import org.hibernate.annotations.CreationTimestamp;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.Lob;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -32,9 +34,14 @@ public class MediaFile {
 
     private Long size;
 
-    @Lob 
-    private byte[] data;
+    // Cloudinary URL
+private String url;
 
+
+// Cloudinary public id
+private String publicId;
+
+   @Enumerated(EnumType.STRING)
     private Storage storage;
 
     @CreationTimestamp 

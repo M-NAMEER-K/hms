@@ -18,6 +18,7 @@ import org.springframework.data.domain.Page;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
 
 @Service 
 public class DoctorServiceImpl implements  DoctorService{
@@ -28,10 +29,10 @@ public class DoctorServiceImpl implements  DoctorService{
     @Override 
       public Long addDoctor(DoctorDto doctorDto) throws HmsException{
             if(doctorDto.getEmail()!=null && doctorRepository.findByEmail(doctorDto.getEmail()).isPresent()){
-                 throw new HmsException("DOCTOR_ALREADY_EXISTS");
+         throw new HmsException(  "DOCTOR_ALREADY_EXISTS",  HttpStatus.CONFLICT);
             }
             if(doctorDto.getLicenseNumber()!=null && doctorRepository.findByLicenseNumber(doctorDto.getLicenseNumber()).isPresent()){
-                 throw new HmsException("DOCTOR_ALREADY_EXISTS");
+                 throw new HmsException( "DOCTOR_ALREADY_EXISTS", HttpStatus.CONFLICT);
             }
            return doctorRepository.save(doctorDto.toEntity()).getId();
             
@@ -39,7 +40,7 @@ public class DoctorServiceImpl implements  DoctorService{
     
       @Override 
          public DoctorDto getDoctorById(Long id ) throws HmsException{
-           return doctorRepository.findById(id).orElseThrow(()->new HmsException(("DOCTOR_NOT_FOUND"))).toDto();
+           return doctorRepository.findById(id).orElseThrow(()->new HmsException("DOCTOR_NOT_FOUND", HttpStatus.NOT_FOUND)).toDto();
          }
 
         @Override   
@@ -48,7 +49,7 @@ public class DoctorServiceImpl implements  DoctorService{
 System.out.println("ID = " + doctorDto.getId());
 System.out.println("Name = " + doctorDto.getName());
 System.out.println("Email = " + doctorDto.getEmail());
-            doctorRepository.findById(doctorDto.getId()).orElseThrow(()->new HmsException("DOCTOR_NOT_FOUND"));
+            doctorRepository.findById(doctorDto.getId()).orElseThrow(()->new HmsException("DOCTOR_NOT_FOUND", HttpStatus.NOT_FOUND));
             return doctorRepository.save(doctorDto.toEntity()).toDto();
          } 
 
@@ -84,7 +85,7 @@ System.out.println("Email = " + doctorDto.getEmail());
 
             @Override
             public void updateProfilePicture(Long id,Long mediaId) throws HmsException {
-           Doctor doctor=doctorRepository.findById(id).orElseThrow(()->new HmsException("DOCTOR_NOT_FOUND"));
+           Doctor doctor=doctorRepository.findById(id).orElseThrow(()->new HmsException("DOCTOR_NOT_FOUND", HttpStatus.NOT_FOUND));
 
       doctor.setProfilePictureId(mediaId);
       doctorRepository.save(doctor);

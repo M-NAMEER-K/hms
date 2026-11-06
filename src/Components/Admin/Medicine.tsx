@@ -6,6 +6,8 @@ import { addMedicineServiceAPI, getAllMedicinesAPI, updateMedicineAPI } from "..
 import { FaRegEdit } from "react-icons/fa";
 import Loader from "../Common/Loader";
 import Pagination from "../Common/Pagination";
+import type { ApiError } from "../Common/ErrorModal";
+import ErrorModal from "../Common/ErrorModal";
 
 
 const Medicine=()=>{
@@ -23,9 +25,25 @@ const [manufacturer, setManufacturer] =useState<string>("");
 const [unitPrice, setUnitPrice] = useState("");
 const [currentPage,setCurrentPage] = useState(0);
 const [totalPages,setTotalPages] = useState(0);
-
+const [apiErrors,setApiErrors] = useState<ApiError[]>([]);
 const pageSize = 5;
 
+const handleApiError = (err:any)=>{
+
+    setApiErrors(prev=>[
+        ...prev,
+        {
+            id:Date.now(),
+            status:err.response?.status,
+            message:
+            err.response?.data?.errorMessage ||
+            err.response?.data?.message ||
+            err.message ||
+            "Something went wrong"
+        }
+    ]);
+
+};
 
 useEffect(() => {
 
@@ -141,7 +159,8 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         resetForm();
         setShowForm(false);
     } catch (err: any) {
-        console.error(err);
+      console.error(err);
+    handleApiError(err);
 
       
     } finally {
@@ -157,7 +176,7 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
 
      return(
         <div className="w-screen h-screen p-2">
-        
+              <ErrorModal     errors={apiErrors}    onClose={()=>setApiErrors([])} />
               <button onClick={() => setShowForm(true)}
           className="bg-green-500 hover:bg-green-600 text-white flex items-center gap-2 px-4 py-2 rounded-lg" >
           

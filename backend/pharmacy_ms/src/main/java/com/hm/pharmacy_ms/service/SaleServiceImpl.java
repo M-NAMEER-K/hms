@@ -11,6 +11,7 @@ import com.hm.pharmacy_ms.entity.Sale;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
@@ -34,19 +35,17 @@ public class SaleServiceImpl implements SaleService {
          @Override 
          @Transactional 
          public Long createSale(SaleRequestDto dto) throws HmsException{
-            if(dto.getPrescriptionId()!=null && saleRepository.existsByPrescriptionId(dto.getPrescriptionId())){
-                  throw new HmsException("SALE_ALREADY_EXISTS");
-            }
+           
 
               for(SaleItemDto saleItem:dto.getSaleItems()){
                     Medicine medicine = medicineRepository.findById(saleItem.getMedicineId())
-                     .orElseThrow(() -> new HmsException("MEDICINE_NOT_FOUND"));
+                     .orElseThrow(() -> new HmsException("MEDICINE_NOT_FOUND", HttpStatus.NOT_FOUND));
                saleItem.setUnitPrice(medicine.getUnitPrice().doubleValue());
 
                saleItem.setBatchNumber( medicineInventoryService.sellStock(saleItem.getMedicineId(), saleItem.getQuantity()));
               }
-              
-              Sale sale=new Sale(null , dto.getPrescriptionId(),dto.getBuyerName(),dto.getBuyerContact(),LocalDateTime.now(),dto.getTotalAmount());
+                System.out.println("DTO_DOCTOR"+dto.getDoctorName()+" "+"DTO_PATIENT"+dto.getPatientName());
+              Sale sale=new Sale(null , dto.getPrescriptionId(),dto.getBuyerName(),dto.getBuyerContact(),dto.getDoctorName(),dto.getPatientName(),LocalDateTime.now(),dto.getTotalAmount());
               sale=saleRepository.save(sale);
               saleItemService.createSaleItems(sale.getId(), dto.getSaleItems() );
              return sale.getId();
@@ -54,7 +53,7 @@ public class SaleServiceImpl implements SaleService {
 
          @Override 
          public void updateSale(SaleDto dto) throws HmsException{
-              Sale sale= saleRepository.findById(dto.getId()).orElseThrow(() -> new HmsException("SALE_NOT_FOUND"));
+              Sale sale= saleRepository.findById(dto.getId()).orElseThrow(() -> new HmsException("SALE_NOT_FOUND", HttpStatus.NOT_FOUND));
               sale.setSaleDate(dto.getSaleDate());
               sale.setTotalAmount(dto.getTotalAmount());
                saleRepository.save(sale);
@@ -62,12 +61,12 @@ public class SaleServiceImpl implements SaleService {
 
          @Override 
          public SaleDto getSale(Long id) throws HmsException{
-                return saleRepository.findById(id).orElseThrow(()-> new HmsException("SALE_NOT_FOUND")).toDto();
+                return saleRepository.findById(id).orElseThrow(()-> new HmsException("SALE_NOT_FOUND", HttpStatus.NOT_FOUND)).toDto();
          }
 
          @Override 
          public SaleDto getSaleByPrescriptionId(Long prescriptionId) throws HmsException{
-             return saleRepository.findByPrescriptionId(prescriptionId).orElseThrow(() -> new HmsException("SALE_NOT_FOUND")).toDto();
+             return saleRepository.findByPrescriptionId(prescriptionId).orElseThrow(() -> new HmsException("SALE_NOT_FOUND", HttpStatus.NOT_FOUND)).toDto();
          }
     @Override
 public Page<SaleDto> getAllSales(int page, int size) throws HmsException {

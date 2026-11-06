@@ -36,30 +36,28 @@ public class MediaApi {
         return ResponseEntity.ok(mediaFileDto);
     }
 
+    @PutMapping("/replace/{oldMediaId}")
+public ResponseEntity<MediaFileDto> replaceFile( @PathVariable Long oldMediaId, @RequestParam("file") MultipartFile file) throws IOException, MediaException {
 
 
-    @GetMapping("/{id}")
-    public ResponseEntity<byte[]> getFile( @PathVariable Long id){
+    MediaFileDto response =  mediaService.replaceFile(oldMediaId,file);
 
 
-        Optional<MediaFile> mediaFileOptional =mediaService.getFile(id);
+    return ResponseEntity.ok(response);
+
+}
 
 
-        if(mediaFileOptional.isPresent()){
+@GetMapping("/{id}")
+public ResponseEntity<String> getFile(@PathVariable Long id)
+{
 
-            MediaFile mediaFile =         mediaFileOptional.get();
-
-
-            return ResponseEntity.ok()
-                    .contentType(
-                     MediaType.parseMediaType(
-                     mediaFile.getType()))
-                    .body(mediaFile.getData());
-        }
+MediaFile file =mediaService.getFile(id).orElseThrow();
 
 
-        return ResponseEntity.notFound().build();
-    }
+return ResponseEntity.ok(file.getUrl());
+
+}
 
     @DeleteMapping("/{id}")
        public ResponseEntity<String> deleteFile(@PathVariable Long id) throws MediaException {

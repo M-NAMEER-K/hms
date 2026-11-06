@@ -2,6 +2,8 @@ import {useState} from "react";
 import {useNavigate, useParams} from "react-router";
 import { resetPasswordAPI } from "../../Services/UserServiceOps";
 import { validateResetPassword } from "../../Utils/Validators/authValidators";
+import type { ApiError } from "./ErrorModal";
+import ErrorModal from "./ErrorModal";
 
 
 
@@ -16,7 +18,7 @@ const [password,setPassword]=useState("");
 const navigate=useNavigate();
 const [loading,setLoading]=useState<boolean>(false);
 const [errors,setErrors]=useState<{password?:string;}>({});
-
+const [apiErrors,setApiErrors] = useState<ApiError[]>([]);
 
 
 const submit = async () => {
@@ -44,6 +46,15 @@ return;
      }
      catch(err:any){
            console.log(err.response.data);
+            setApiErrors([
+    {
+      id:Date.now(),
+      status:err.response?.status,
+      message:
+        err.response?.data?.errorMessage ||
+        "Unable to reset password."
+    }
+ ]);
   
 
 }
@@ -62,7 +73,7 @@ return(
    
     <h2 className="font-medium text-xl text-pink-500">Reset Password</h2>
          
-          
+           <ErrorModal errors={apiErrors} onClose={()=>{ setApiErrors([]);}}/>
 
          <div className="w-full flex flex-col items-center justify-center p-2 ">
              <div className="w-[50%] font-medium flex items-center justify-center flex-col gap-y-1 text-gray-600 ">

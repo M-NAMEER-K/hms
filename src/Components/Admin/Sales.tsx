@@ -6,6 +6,9 @@ import { validateSale, type SaleErrors } from "../../Utils/Validators/saleValida
 import { FaRegEye } from "react-icons/fa";
 import Loader from "../Common/Loader";
 import Pagination from "../Common/Pagination";
+import ErrorModal, { type ApiError } from "../Common/ErrorModal";
+import { validateFetchPrescription, type FetchPrescriptionErrors } from "../../Utils/Validators/appointmentValidators";
+import { getPatientPrescriptionByPatientAndPrescriptionAPI } from "../../Services/AppointmentServiceOps";
 
 
 
@@ -30,20 +33,24 @@ const [saleItems, setSaleItems] = useState<SaleItem[]>([
 ]);
    const [buyerName, setBuyerName] = useState("");
 const [buyerContact, setBuyerContact] = useState("");
+const [patientId, setPatientId] = useState("");
+const [prescriptionId, setPrescriptionId] = useState("");
 
+const [fetchPrescriptionErrors,  setFetchPrescriptionErrors] = useState<FetchPrescriptionErrors>({});
 const [errors, setErrors] = useState<SaleErrors>({});
     const [showForm, setShowForm] = useState<boolean>(false);
    const [pageLoading, setPageLoading] = useState<boolean>(true);
 const [loading, setLoading] = useState<boolean>(false);
+const [fetchDetailLoading,setFetchDetailLoading]=useState<boolean>(false);
     const [medicines, setMedicines] = useState<any[]>([]);
     const [sales,setSales]=useState<any[]>([]);
  const [selectedSaleItems, setSelectedSaleItems] = useState<any[]>([]);
 const [showSaleDetails, setShowSaleDetails] = useState(false);
  const [selectedSale, setSelectedSale] = useState<any>(null);
-
+const [apiErrors,setApiErrors]=useState<ApiError[]>([])
  const [currentPage,setCurrentPage] = useState(0);
 const [totalPages,setTotalPages] = useState(0);
-
+const [prescriptionData, setPrescriptionData] = useState<any>(null);
 const pageSize = 5;
 
 useEffect(() => {
@@ -60,6 +67,7 @@ useEffect(() => {
 
         } catch(err){
             console.log(err);
+            
         }
         finally{
             setPageLoading(false);
@@ -76,7 +84,7 @@ useEffect(() => {
 const viewSaleDetails = async (sale: any) => {
 
     const data = await getSaleItemsAPI(sale.id);
-
+           console.log("sale",data);
     setSelectedSaleItems(data);
     setSelectedSale(sale);
 
@@ -86,9 +94,71 @@ const viewSaleDetails = async (sale: any) => {
 
 const fetchMedicines = async () => {
 
-    const data = await getAllMedicinesAPI(currentPage,pageSize);
-
+    const data = await getAllMedicinesAPI(0,1000);
+   console.log("medicines fetched",data);
     setMedicines(data.content || []);
+
+};
+
+
+const fetchPatientPrescription = async (
+    e: React.FormEvent<HTMLFormElement>
+) => {
+
+    e.preventDefault();
+
+    const validationErrors = validateFetchPrescription({
+        patientId,
+        prescriptionId
+    });
+
+    setFetchPrescriptionErrors(validationErrors);
+
+    if (Object.keys(validationErrors).length > 0) {
+        return;
+    }
+
+    setFetchDetailLoading(true);
+
+    try {
+           
+            const report=await getPatientPrescriptionByPatientAndPrescriptionAPI(Number(patientId),Number(prescriptionId));
+            console.log(report);
+            
+          setPrescriptionData(report);
+          const updatedSaleItems = report.medicines.map((medicine:any)=>({
+
+    medicineId:String(medicine.id),
+    quantity:"",
+    medicineError:"",
+    quantityError:""
+
+}));
+
+setSaleItems(updatedSaleItems);
+
+    }
+    catch (err: any) {
+
+        console.log(err);
+
+        setApiErrors([
+            {
+                id: Date.now(),
+                status: err.response?.data?.errorCode,
+                message:
+                    err.response?.data?.errorMessage ||
+                    err.message ||
+                    "Something went wrong."
+            }
+        ]);
+
+    }
+    finally {
+
+        setFetchDetailLoading(false);
+
+    }
 
 };
 
@@ -229,6 +299,9 @@ try {
 const data = {
     buyerName,
     buyerContact,
+  prescriptionId: prescriptionData?.id,
+    doctorName: prescriptionData?.doctorName,
+    patientName: prescriptionData?.patientName,
     totalAmount,
     saleItems: saleItems
         .filter(item => {
@@ -255,6 +328,17 @@ const data = {
        }
      catch(err:any){
            console.log(err.response.data);
+            setApiErrors([
+        {
+            id: Date.now(),
+          
+            status: err.response?.data?.errorCode,
+            message:
+                err.response?.data?.errorMessage ||
+                err.message ||
+                "Something went wrong."
+        }
+    ]);
    
 
 }
@@ -268,7 +352,8 @@ finally{
 };
 
 const resetForm = () => {
-
+   setPatientId("");
+setPrescriptionId("");
     setBuyerName("");
     setBuyerContact("");
 
@@ -290,11 +375,13 @@ if(pageLoading){
 
     return(
         <div className="min-h-screen w-screen p-2">
-                 
+                   <ErrorModal errors={apiErrors}  onClose={() => { setApiErrors([]);  }}  />     
                 
             <button onClick={() => setShowForm(true)}
              className="bg-green-500 hover:bg-green-600 text-white flex items-center gap-2 px-4 py-2 rounded-lg" >
            Sell Medicine</button>
+
+               
 
      {showForm && (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
@@ -315,12 +402,97 @@ if(pageLoading){
                   </button>
                 </div>
                 <div className="flex-1 overflow-y-auto p-4">
+                <form onSubmit={fetchPatientPrescription}  className="border border-gray-300 rounded-lg p-4 mb-3 flex flex-col justify-center">
+                        <div>
+                            <label  className="font-medium" >PATIENT_ID</label>
+                          <input  type="text"  value={patientId}  onChange={(e)=>{      setPatientId(e.target.value);
+        setFetchPrescriptionErrors(prev=>({
+            ...prev,
+            patientId: undefined
+        }));
+    }}
+    className="w-full border rounded-lg p-2 border-green-500 outline-none my-1"/>
+                        </div>
+                      {fetchPrescriptionErrors.patientId && (
+    <p className="text-red-500 text-sm">
+        {fetchPrescriptionErrors.patientId}
+    </p>
+)}
+                        <div>
+                            <label  className="font-medium">PRESCRIPTION_ID</label>
+                          <input   type="text"   value={prescriptionId}   onChange={(e)=>{       setPrescriptionId(e.target.value);
+        setFetchPrescriptionErrors(prev=>({
+            ...prev,
+            prescriptionId: undefined
+        }));
+    }}
+    className="w-full border rounded-lg p-2 border-green-500 outline-none my-1"/>
+                        </div>
+                        {fetchPrescriptionErrors.prescriptionId && (
+    <p className="text-red-500 text-sm">
+        {fetchPrescriptionErrors.prescriptionId}
+    </p>
+)}
+                       <button
+type="submit"
+ className="w-[50%] bg-green-500 hover:bg-green-300 text-white px-4 py-2 rounded-lg"
+disabled={fetchDetailLoading}
+>
+{fetchDetailLoading ?  "Getting Your Details...":"Fetch Details" }
+</button>
+                </form>
                 <div className="w-full flex flex-col gap-y-2">
                     <p className="text-xl font-semibold text-green-500">
                        Buyer Information
                   </p>
                   <div className="border border-gray-300 rounded-lg p-4 mb-3">
-                     
+                     {prescriptionData && (
+    <div className=" rounded-lg  flex flex-col gap-y-1">
+
+        <div>
+            <label className="font-medium">
+                Patient Name
+            </label>
+
+            <input
+                type="text"
+                value={prescriptionData.patientName}
+                readOnly
+                className="w-full border rounded-lg p-2 border-green-500 outline-none my-1"
+            />
+        </div>
+
+
+        <div>
+            <label className="font-medium">
+                Doctor Name
+            </label>
+
+            <input
+                type="text"
+                value={prescriptionData.doctorName}
+                readOnly
+                className="w-full border rounded-lg p-2 border-green-500 outline-none my-1"
+            />
+        </div>
+
+
+        <div>
+            <label className="font-medium">
+                Prescription ID
+            </label>
+
+            <input
+                type="text"
+                value={prescriptionData.id}
+                readOnly
+                className="w-full border rounded-lg p-2 border-green-500 outline-none my-1"
+            />
+        </div>
+
+    </div>
+)}
+
                      <div className="flex flex-col mb-2">
                         <label className="font-medium" >Buyer Name</label>
                       <input
@@ -341,6 +513,7 @@ if(pageLoading){
         {errors.buyerName}
     </p>
 )}  </div>
+
                      <div className="flex flex-col mb-2">
                         <label className="font-medium">Buyer Contact</label>
                        <input
@@ -575,6 +748,7 @@ disabled={loading}
                         </p>
                         <p>{sale.buyerContact || "-"}</p>
                     </div>
+                    
 
                     <div>
                         <p className="text-xs font-semibold text-gray-500">
@@ -668,7 +842,13 @@ showSaleDetails && (
         <p>
             <b>Contact:</b> {selectedSale.buyerContact}
         </p>
-
+         <p>
+            <b>Doctor:</b> {selectedSale.doctorName}
+        </p>
+         <p>
+            <b>Patient:</b> {selectedSale.patientName}
+        </p>
+   
         <p>
             <b>Total Amount:</b> ₹{selectedSale.totalAmount}
         </p>

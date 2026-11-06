@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.data.domain.PageRequest;
 
 import org.springframework.scheduling.annotation.Scheduled;
@@ -44,7 +45,7 @@ public Page<MedicineInventoryDto> getAllMedicines(int page, int size) throws Hms
 
       @Override 
       public MedicineInventoryDto getMedicineById(Long id) throws HmsException{
-          return medicineInventoryRepository.findById(id).orElseThrow(()-> new HmsException("INVENTORY_NOT_FOUND")).toDto();
+          return medicineInventoryRepository.findById(id).orElseThrow(()-> new HmsException("INVENTORY_NOT_FOUND",  HttpStatus.NOT_FOUND)).toDto();
       }
 
     @Override 
@@ -58,7 +59,7 @@ public Page<MedicineInventoryDto> getAllMedicines(int page, int size) throws Hms
 
     @Override 
     public MedicineInventoryDto updateMedicine(MedicineInventoryDto medicine) throws HmsException{
-            MedicineInventory existingInventory=medicineInventoryRepository.findById(medicine.getId()).orElseThrow(()-> new HmsException("INVENTORY_NOT_FOUND"));
+            MedicineInventory existingInventory=medicineInventoryRepository.findById(medicine.getId()).orElseThrow(()-> new HmsException("INVENTORY_NOT_FOUND",  HttpStatus.NOT_FOUND));
             existingInventory.setBatchNumber(medicine.getBatchNumber());
               if(existingInventory.getInitialQuantity() < medicine.getQuantity()){
                  medicineService.addStock(medicine.getMedicineId(),medicine.getQuantity()- existingInventory.getInitialQuantity());
@@ -105,14 +106,14 @@ public Page<MedicineInventoryDto> getAllMedicines(int page, int size) throws Hms
       public String sellStock(Long medicineId , Integer quantity) throws HmsException{
             
             Medicine medicine = medicineRepository.findById(medicineId)
-            .orElseThrow(() -> new HmsException("MEDICINE_NOT_FOUND"));
+            .orElseThrow(() -> new HmsException("MEDICINE_NOT_FOUND",  HttpStatus.NOT_FOUND));
 
 
 
            List<MedicineInventory> inventories=medicineInventoryRepository.findByMedicineAndExpiryDateAfterAndQuantityGreaterThanAndStatusOrderByExpiryDateAsc(
             medicine, LocalDate.now(), 0 , StockStatus.ACTIVE);
             if(inventories.isEmpty()){
-              throw new HmsException("OUT_OF_STOCK");
+              throw new HmsException("OUT_OF_STOCK",HttpStatus.CONFLICT);
             }
         StringBuilder batchDetails = new StringBuilder();
         int remainingQuantity=quantity;
@@ -139,7 +140,7 @@ public Page<MedicineInventoryDto> getAllMedicines(int page, int size) throws Hms
           
         }
         if(remainingQuantity > 0){
-          throw new HmsException("INSUFFICIENT_STOCK");
+          throw new HmsException("INSUFFICIENT_STOCK",  HttpStatus.CONFLICT);
         }
           medicineService.removeStock(medicineId, quantity);
           medicineInventoryRepository.saveAll(inventories);

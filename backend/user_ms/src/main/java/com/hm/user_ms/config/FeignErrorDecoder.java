@@ -1,5 +1,7 @@
 package com.hm.user_ms.config;
 
+import org.springframework.http.HttpStatus;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hm.user_ms.dto.ErrorResponseDto;
 import com.hm.user_ms.exception.HmsException;
@@ -13,25 +15,22 @@ public class FeignErrorDecoder implements ErrorDecoder {
     private ObjectMapper mapper = new ObjectMapper();
 
 
-    @Override
-    public Exception decode(String methodKey, Response response) {
+ @Override
+public Exception decode(String methodKey, Response response) {
 
-        try {
+    try {
 
-            ErrorResponseDto error = mapper.readValue(
-                    response.body().asInputStream(),
-                    ErrorResponseDto.class
-            );
+        ErrorResponseDto error = mapper.readValue( response.body().asInputStream(), ErrorResponseDto.class );
 
 
-            return new HmsException(error.getErrorMessage());
+        return new HmsException(  error.getErrorMessage(),  HttpStatus.valueOf(error.getErrorCode())  );
 
 
-        } catch(Exception e){
+    } catch(Exception e){
 
-            return new HmsException("PROFILE_SERVICE_ERROR");
-        }
-
+        return new HmsException(    "PROFILE_SERVICE_ERROR",    HttpStatus.INTERNAL_SERVER_ERROR );
     }
+
+}
 
 }

@@ -9,6 +9,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
 
 import com.hm.appointment_ms.dto.filters.PrescriptionFilterDto;
 import com.hm.appointment_ms.dto.specification.PrescriptionSpecification;
@@ -17,11 +18,13 @@ import com.hm.appointment_ms.dto.specification.PrescriptionSpecification;
 import org.springframework.stereotype.Service;
 
 import com.hm.appointment_ms.clients.ProfileClient;
+import com.hm.appointment_ms.dto.DoctorDto;
 import com.hm.appointment_ms.dto.DoctorName;
 import com.hm.appointment_ms.dto.PrescriptionDetailsDto;
 import com.hm.appointment_ms.dto.PrescriptionDto;
 
 import com.hm.appointment_ms.dto.MedicineDto;
+import com.hm.appointment_ms.dto.PatientDto;
 import com.hm.appointment_ms.entity.Prescription;
 import com.hm.appointment_ms.exception.HmsException;
 
@@ -52,14 +55,14 @@ public class PrescriptionServiceImpl implements PrescriptionService{
 
        @Override 
        public PrescriptionDto getPrescriptionByAppointmentId(Long appointmentId) throws HmsException{
-           PrescriptionDto prescriptionDto=prescriptionRespository.findByAppointment_Id(appointmentId).orElseThrow(()-> new HmsException("PRESCRIPTION_NOT_FOUND")).toDto();
+           PrescriptionDto prescriptionDto=prescriptionRespository.findByAppointment_Id(appointmentId).orElseThrow(()-> new HmsException("PRESCRIPTION_NOT_FOUND",HttpStatus.NOT_FOUND)).toDto();
              prescriptionDto.setMedicines(medicineService.getAllMedicinesByPrescriptionId(prescriptionDto.getId()));  
            return prescriptionDto;
        }
 
        @Override 
        public PrescriptionDto getPrescriptionById(Long prescriptionId) throws HmsException{
-             PrescriptionDto prescriptionDto=prescriptionRespository.findById(prescriptionId).orElseThrow(()-> new HmsException("PRESCRIPTION_NOT_FOUND")).toDto();
+             PrescriptionDto prescriptionDto=prescriptionRespository.findById(prescriptionId).orElseThrow(()-> new HmsException("PRESCRIPTION_NOT_FOUND",HttpStatus.NOT_FOUND)).toDto();
               prescriptionDto.setMedicines(medicineService.getAllMedicinesByPrescriptionId(prescriptionDto.getId()));
       
        return prescriptionDto;
@@ -161,4 +164,35 @@ public class PrescriptionServiceImpl implements PrescriptionService{
                 return medicineService.getMedicinesByPrescriptionIds(pIds);
              }
 
+
+           @Override
+public PrescriptionDetailsDto getPrescriptionByPatientAndPrescription(
+        Long patientId,
+        Long prescriptionId) throws HmsException {
+
+    Prescription prescription = prescriptionRespository.findById(prescriptionId)
+            .orElseThrow(() -> new HmsException(
+                    "PRESCRIPTION_NOT_FOUND",
+                    HttpStatus.NOT_FOUND));
+
+    if (!prescription.getPatientId().equals(patientId)) {
+        throw new HmsException(
+                "INVALID_PATIENT_PRESCRIPTION",
+                HttpStatus.BAD_REQUEST);
+    }
+
+    PrescriptionDetailsDto dto = prescription.toDetails();
+
+    DoctorDto doctor = profileClient.getDoctorById(prescription.getDoctorId());
+    PatientDto patient = profileClient.getPatientById(prescription.getPatientId());
+
+    dto.setDoctorName(doctor.getName());
+    dto.setPatientName(patient.getName());
+
+    dto.setMedicines(
+        medicineService.getAllMedicinesByPrescriptionId(prescriptionId)
+    );
+
+    return dto;
+}
 }

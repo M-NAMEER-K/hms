@@ -5,7 +5,8 @@ import Loader from "../Common/Loader";
 import Filter from "../Common/Filter";
 import { doctorFilterConfig } from "../../Utils/filters/doctorFilterConfig";
 import Pagination from "../Common/Pagination";
-
+import { FaRegCircleUser } from "react-icons/fa6";
+import { getProfileImageAPI } from "../../Services/MediaServiceOps";
 
 
 interface Doctor {
@@ -28,7 +29,8 @@ const Doctor=()=>{
     const [doctors, setDoctors] = useState<Doctor[]>([]);
     const [selectedDoctor, setSelectedDoctor] = useState<Doctor | null>(null);
     const [pageLoading, setPageLoading] = useState(true);
-   
+   const [doctorImages, setDoctorImages] = useState<Record<number,string>>({});
+const [previewImage, setPreviewImage] = useState<string | null>(null);
     const [showModal, setShowModal] = useState(false);
 
     const [currentPage, setCurrentPage] = useState(0);
@@ -51,6 +53,37 @@ const Doctor=()=>{
         try {
             const data = await getAllDoctorsAPI( page, pageSize, appliedFilters );
             setDoctors(data.content || []);
+            const doctorsWithImages = data.content || [];
+
+const imageMap: Record<number,string> = {};
+
+await Promise.all(
+    doctorsWithImages.map(async (doctor:Doctor)=>{
+
+        if(doctor.profilePictureId){
+
+            try{
+
+                const url = await getProfileImageAPI(
+                    doctor.profilePictureId
+                );
+
+                imageMap[doctor.id] = url;
+
+            }
+            catch(err){
+
+                console.log(err);
+
+            }
+
+        }
+
+    })
+);
+
+
+            setDoctorImages(imageMap);
             setCurrentPage(data.number);
             setTotalPages(data.totalPages);
 
@@ -109,6 +142,27 @@ finally{
             key={doctor.id}
             className="border rounded-lg shadow bg-white p-2 my-2 flex flex-col gap-y-1"
         >
+             <div >
+                              
+{
+doctorImages[doctor.id] ?
+
+<img
+src={doctorImages[doctor.id]}
+alt="doctor"
+onClick={()=>setPreviewImage(doctorImages[doctor.id])}
+className="w-10 h-10 rounded-full object-cover cursor-pointer"
+/>
+
+:
+
+<FaRegCircleUser 
+size={35}
+/>
+
+}
+
+                              </div>
             <div>
                 <p className="text-xs font-semibold text-gray-500">
                     Name
@@ -150,10 +204,11 @@ finally{
                     {/* Header */}
 
                     <div className="w-full flex bg-green-500 text-white font-semibold p-2">
+                        <div className="w-[10%]"></div>
                         <div className="w-[30%]">Name</div>
                         <div className="w-[30%]">Email</div>
                         <div className="w-[20%]">Phone Number</div>
-                        <div className="w-[20%]"> </div>
+                        <div className="w-[10%]"> </div>
                     </div>
 
                     {/* Rows */}
@@ -163,6 +218,27 @@ finally{
                             key={doctor.id}
                             className="w-full flex border-t p-2 hover:bg-gray-100"
                         >
+                              <div className="w-[10%]">
+                              
+{
+doctorImages[doctor.id] ?
+
+<img
+src={doctorImages[doctor.id]}
+alt="doctor"
+onClick={()=>setPreviewImage(doctorImages[doctor.id])}
+className="w-10 h-10 rounded-full object-cover cursor-pointer"
+/>
+
+:
+
+<FaRegCircleUser 
+size={35}
+/>
+
+}
+
+                              </div>
                             <div className="w-[30%] break-words">
                                 {doctor.name}
                             </div>
@@ -174,7 +250,7 @@ finally{
                             <div className="w-[20%] break-words">
                                 {doctor.phone}
                             </div>
-                           <div className="w-[20%] flex justify-center items-center">
+                           <div className="w-[10%] flex justify-center items-center">
                    <FaRegEye size={20} className="text-blue-500 hover:text-blue-300 cursor-pointer"
         onClick={() => {
             setSelectedDoctor(doctor);
@@ -244,6 +320,37 @@ finally{
     totalPages={totalPages}
     onPageChange={(page)=>setCurrentPage(page)}
 />
+
+{
+previewImage && (
+
+<div className="fixed inset-0 bg-black/30 backdrop-blur flex items-center justify-center z-50">
+
+
+<div className="relative">
+
+
+<button
+onClick={()=>setPreviewImage(null)}
+className="absolute -top-4 -right-4 bg-red-500 text-white rounded-full w-8 h-8 text-xl"
+>
+×
+</button>
+
+
+<img
+src={previewImage}
+className="max-w-[80vw] max-h-[90vh] rounded-xl object-contain"
+/>
+
+
+</div>
+
+
+</div>
+
+)
+}
         </div>
     );
 };

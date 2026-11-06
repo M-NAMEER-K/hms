@@ -6,6 +6,8 @@ import { loginAPI } from "../../Services/UserServiceOps";
 import { useNavigate } from "react-router";
 import { useDispatch } from "react-redux";
 import { FaRegEye, FaRegEyeSlash } from "react-icons/fa";
+import type { ApiError } from "../Common/ErrorModal";
+import ErrorModal from "../Common/ErrorModal";
 
 
 
@@ -25,7 +27,8 @@ const Login=()=>{
          confirmPassword?: string; 
          }>({});
      
-      
+      const [apiErrors, setApiErrors] = useState<ApiError[]>([]);
+   
      
      
        const handleSubmit=async (e:React.FormEvent<HTMLFormElement>)=>{
@@ -49,10 +52,24 @@ const Login=()=>{
     try {
         await loginAPI({ email, password }, navigate, dispatch);
     }
-   catch(err:any){
-           console.log(err.response.data);
- 
+ catch (err: any) {
 
+    console.log(err.response.data);
+
+
+    setApiErrors([
+        {
+            id: Date.now(),
+          
+            status: err.response?.data?.errorCode,
+            message:
+                err.response?.data?.errorMessage ||
+                err.message ||
+                "Something went wrong."
+        }
+    ]);
+
+    
 }
 finally{
 
@@ -66,7 +83,7 @@ finally{
 
      return(
      <div className="w-screen min-h-screen flex justify-center items-center bg-center bg-no-repeat bg-[length:100%_100%] sm:bg-[length:70%_70%] md:bg-[length:100%_100%] lg:bg-cover" style={{backgroundImage:`url(${logReg})`}}>
-                            
+                      <ErrorModal errors={apiErrors}  onClose={() => { setApiErrors([]);  }}  />       
                                 
 
                  <form onSubmit={handleSubmit} className="max-h-[95vh] overflow-y-auto w-[95%] sm:w-[90%] md:w-[60%] lg:w-[40%] border border-gray-200 flex flex-col items-center gap-y-3  rounded-lg   p-2">
@@ -125,6 +142,12 @@ finally{
                         <div className="w-full text-center text-sm">Don't have an account ? <Link to="/register" className="font-medium text-pink-600 underline">Register</Link></div>
                        
                  </form>
+
+
+
+
+                
+    <ErrorModal errors={apiErrors}  onClose={() => { setApiErrors([]);  }}  />
      </div>
      )
 }

@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import com.hm.appointment_ms.Utility.StringListConverter;
@@ -34,7 +35,7 @@ public class AppointmentRecordServiceImpl implements AppointmentRecordService{
     public Long createAppointmentRecord(AppointmentRecordDto request) throws HmsException{
        Optional<AppointmentRecord> existingRecord=appointmentRecordRepository.findByAppointment_Id(request.getAppointmentId());
          if(existingRecord.isPresent()){
-             throw new HmsException("APPOINTMENT_RECORD_ALREADY_EXISTS");
+             throw new HmsException("APPOINTMENT_RECORD_ALREADY_EXISTS", HttpStatus.CONFLICT);
          }
            Long id=appointmentRecordRepository.save(request.toEntity()).getId();
            if(request.getPrescription()!=null){
@@ -47,7 +48,7 @@ public class AppointmentRecordServiceImpl implements AppointmentRecordService{
 
     @Override 
     public void updateAppointmentRecord(AppointmentRecordDto request) throws HmsException{
-         AppointmentRecord existing=appointmentRecordRepository.findById(request.getId()).orElseThrow(()-> new HmsException("APPOINTMENT_RECORD_NOT_FOUND"));
+         AppointmentRecord existing=appointmentRecordRepository.findById(request.getId()).orElseThrow(()-> new HmsException("APPOINTMENT_RECORD_NOT_FOUND", HttpStatus.NOT_FOUND));
          existing.setNotes(request.getNotes());
          existing.setDiagnosis(request.getDiagnosis());
          existing.setFollowUpdate(request.getFollowUpdate());
@@ -59,17 +60,17 @@ public class AppointmentRecordServiceImpl implements AppointmentRecordService{
 
     @Override 
     public AppointmentRecordDto getAppointmentRecordByAppointmentId(Long appointmentId) throws HmsException{
-          return appointmentRecordRepository.findByAppointment_Id(appointmentId).orElseThrow(()-> new HmsException("APPOINTMENT_RECORD_NOT_FOUND")).toDto();
+          return appointmentRecordRepository.findByAppointment_Id(appointmentId).orElseThrow(()-> new HmsException("APPOINTMENT_RECORD_NOT_FOUND", HttpStatus.NOT_FOUND)).toDto();
     }
 
     @Override 
     public AppointmentRecordDto getAppointmentRecordById(Long recordId) throws HmsException{
-            return appointmentRecordRepository.findById(recordId).orElseThrow(()-> new HmsException("APPOINTMENT_RECORD_NOT_FOUND")).toDto();
+            return appointmentRecordRepository.findById(recordId).orElseThrow(()-> new HmsException("APPOINTMENT_RECORD_NOT_FOUND", HttpStatus.NOT_FOUND)).toDto();
     }
 
     @Override 
     public AppointmentRecordDto getAppointmentRecordDetailsByAppointmentId(Long appointmentId) throws HmsException{
-         AppointmentRecordDto record= appointmentRecordRepository.findByAppointment_Id(appointmentId).orElseThrow(()-> new HmsException("APPOINTMENT_RECORD_NOT_FOUND")).toDto();
+         AppointmentRecordDto record= appointmentRecordRepository.findByAppointment_Id(appointmentId).orElseThrow(()-> new HmsException("APPOINTMENT_RECORD_NOT_FOUND", HttpStatus.NOT_FOUND)).toDto();
     
            record.setPrescription(prescriptionService.getPrescriptionByAppointmentId(appointmentId));
             return record;

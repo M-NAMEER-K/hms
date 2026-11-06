@@ -24,7 +24,7 @@ public class MediaFileDto {
 
     private Long size;
 
-    private byte[] data;
+       private String url;
 
     private Storage storage;
     private LocalDateTime createdAt;

@@ -3,6 +3,8 @@ import { useNavigate } from "react-router";
 import { resendOtpAPI, verifyOtpAPI } from "../../Services/UserServiceOps";
 import { validateVerifyOtp } from "../../Utils/Validators/authValidators";
 import Loader from "./Loader";
+import type { ApiError } from "./ErrorModal";
+import ErrorModal from "./ErrorModal";
 
 
 
@@ -21,7 +23,7 @@ const [canResend,setCanResend]=useState(false);
 const [resendLoading,setResendLoading] = useState(false);
 const [pageLoading, setPageLoading] = useState(true);
 const [loading, setLoading] = useState(false);
-
+const [apiErrors,setApiErrors] = useState<ApiError[]>([]);
 
 
 useEffect(()=>{
@@ -113,7 +115,15 @@ if(Object.keys(validationErrors).length>0){
     }
      catch(err:any){
            console.log(err.response.data);
-  
+     setApiErrors([
+        {
+            id: Date.now(),
+            status:err.response?.status,
+            message:
+              err.response?.data?.errorMessage ||
+              "OTP verification failed."
+        }
+    ]);
 
 }
 finally{
@@ -144,6 +154,15 @@ setCanResend(false);
 catch(err:any){
 
 console.log(err);
+   setApiErrors([
+        {
+            id: Date.now(),
+            status:err.response?.status,
+            message:
+              err.response?.data?.errorMessage ||
+              "Unable to resend OTP."
+        }
+    ]);
 
 }
 finally{
@@ -166,7 +185,10 @@ return(
 
 <div className="w-screen min-h-screen flex items-center justify-center">
 
-      
+        <ErrorModal
+        errors={apiErrors}
+        onClose={()=>{
+            setApiErrors([]);   }}  />
 
 <div className="w-[90%] sm:w-[85%] md:w-[80%] flex flex-col items-center gap-y-4 p-4">
 

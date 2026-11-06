@@ -9,17 +9,19 @@ import Loader from "../Common/Loader";
 import Filter from "../Common/Filter";
 import Pagination from "../Common/Pagination";
 import { appointmentFilterConfig } from "../../Utils/filters/appointmentFilterConfig";
+import { getProfileImageAPI } from "../../Services/MediaServiceOps";
+import { FaRegCircleUser } from "react-icons/fa6";
 
 
 const DoctorAppointment=()=>{
  
 
     const navigate=useNavigate();
-  
+   const [patientImages, setPatientImages] = useState<Record<number,string>>({});
     const [appointments, setAppointments] = useState<any[]>([]);
     const [pageLoading, setPageLoading] = useState<boolean>(true);
     const user=useSelector((state:RootState)=>state.user);
-     
+     const [previewImage, setPreviewImage] = useState<string | null>(null);
       const [currentPage, setCurrentPage] = useState(0);
         const [totalPages, setTotalPages] = useState(0);
         const pageSize = 2;
@@ -50,6 +52,35 @@ const loadAppointments = async ( page: number, appliedFilters = filters) => {
 );
 
 setAppointments(data.content || []);
+const appointmentsData = data.content || [];
+
+const imageMap: Record<number,string> = {};
+
+await Promise.all(
+    appointmentsData.map(async (appointment:any)=>{
+
+        if(appointment.profilePictureId){
+
+            try{
+
+                const url = await getProfileImageAPI(
+                    appointment.profilePictureId
+                );
+
+                imageMap[appointment.id] = url;
+
+            }catch(err){
+
+                console.log(err);
+
+            }
+        }
+
+    })
+);
+
+
+setPatientImages(imageMap);
 setCurrentPage(data.number);
 setTotalPages(data.totalPages);
  
@@ -100,7 +131,28 @@ setCurrentPage(0);
         <div
             key={appointment.id}
             className="border flex flex-col gap-y-2 rounded-lg shadow p-2 my-3 bg-white"
-        >
+        >    
+        <div className="flex items-center gap-2">
+
+{
+patientImages[appointment.id] ?
+
+<img
+src={patientImages[appointment.id]}
+alt="patient"
+onClick={()=>setPreviewImage(patientImages[appointment.id])}
+className="w-10 h-10 rounded-full object-cover cursor-pointer"
+/>
+
+:
+
+<FaRegCircleUser size={35}/>
+
+}
+
+
+
+</div>
             <div >
                 <p className="text-xs font-semibold text-gray-500">
                     Patient
@@ -164,6 +216,7 @@ setCurrentPage(0);
    <div className="w-full mt-5 border rounded-lg overflow-hidden">
         {/* Header */}
         <div className="w-full flex  bg-green-500 text-white font-semibold p-1">
+            <div  className="w-[10%] items-center flex justify-start  p-1 break-words whitespace-normal"></div>
             <div className="w-[30%] items-center flex justify-start  p-1 break-words whitespace-normal">Patient</div>
             <div className="w-[20%] items-centerr flex justify-start p-1 break-words whitespace-normal">Appointment Time</div>
             <div className="w-[30%] items-center flex justify-start p-1 break-words whitespace-normal">Reason</div>
@@ -181,7 +234,26 @@ setCurrentPage(0);
             <div
                 key={appointment.id}
                 className="w-full flex p-1 border-t hover:bg-gray-100"
-            >
+            >   
+            <div  className="w-[10%] items-center flex justify-start  p-1 break-words whitespace-normal">
+
+{
+patientImages[appointment.id] ?
+
+<img
+src={patientImages[appointment.id]}
+alt="patient"
+onClick={()=>setPreviewImage(patientImages[appointment.id])}
+className="w-10 h-10 rounded-full object-cover cursor-pointer"
+/>
+
+:
+
+<FaRegCircleUser size={35}/>
+
+}
+
+            </div>
                 <div className="w-[30%]  flex justify-start items-center p-1 break-words whitespace-normal">{appointment.patientName}</div>
                 <div className="w-[20%]  flex justify-start items-center p-1 break-words whitespace-normal">{appointment.appointmentTime}</div>
                 <div className="w-[30%]  flex justify-start items-center p-1 break-words whitespace-normal">{appointment.reason}</div>
@@ -214,6 +286,37 @@ setCurrentPage(0);
 )}
 
        <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={(page) => setCurrentPage(page)}/>
+
+        {
+previewImage && (
+
+<div className="fixed inset-0 bg-black/30 backdrop-blur flex items-center justify-center z-50">
+
+
+<div className="relative">
+
+
+<button
+onClick={()=>setPreviewImage(null)}
+className="absolute -top-4 -right-4 bg-red-500 text-white rounded-full w-8 h-8 text-xl"
+>
+×
+</button>
+
+
+<img
+src={previewImage}
+className="max-w-[80vw] max-h-[90vh] rounded-xl object-contain"
+/>
+
+
+</div>
+
+
+</div>
+
+)
+}
         </div>
      )
 }

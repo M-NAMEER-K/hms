@@ -7,8 +7,10 @@ import java.util.Map;
 
 import javax.crypto.SecretKey;
 
-import org.springframework.security.core.userdetails.UserDetails;
+
 import org.springframework.stereotype.Component;
+
+import com.hm.user_ms.dto.UserDto;
 
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -24,19 +26,18 @@ public class JwtUtil {
     private final SecretKey key =
             Keys.hmacShaKeyFor(SECRET.getBytes(StandardCharsets.UTF_8));
 
-    public String generateToken(UserDetails userDetails) {
+  public String generateToken(UserDto user) {
 
-        Map<String, Object> claims = new HashMap<>();
+    Map<String,Object> claims = new HashMap<>();
 
-        CustomUserDetails user = (CustomUserDetails) userDetails;
+    claims.put("id", user.getId());
+    claims.put("email", user.getEmail());
+    claims.put("role", user.getRole());
+    claims.put("name", user.getName());
 
-        claims.put("id", user.getId());
-        claims.put("email", user.getUsername());
-        claims.put("role", user.getRole());
-        claims.put("name", user.getName());
 
-        return doGenerateToken(claims, user.getUsername());
-    }
+    return doGenerateToken(claims, user.getEmail());
+}
 
     public String doGenerateToken(Map<String, Object> claims, String subject) {
 

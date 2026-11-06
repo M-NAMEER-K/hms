@@ -2,6 +2,7 @@ package com.hm.pharmacy_ms.service;
 
 import java.util.List;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import com.hm.pharmacy_ms.dto.SaleItemDto;
@@ -35,7 +36,7 @@ public class SaleItemServiceImpl implements SaleItemService{
 
     @Override 
     public void updateSaleItem(SaleItemDto saleItemDto) throws HmsException{
-         SaleItem existingSaleItem=saleItemRepository.findById(saleItemDto.getId()).orElseThrow(()-> new HmsException("SALE_ITEM_NOT_FOUND"));
+         SaleItem existingSaleItem=saleItemRepository.findById(saleItemDto.getId()).orElseThrow(()-> new HmsException("SALE_ITEM_NOT_FOUND", HttpStatus.NOT_FOUND));
           existingSaleItem.setQuantity(saleItemDto.getQuantity());
           existingSaleItem.setUnitPrice(saleItemDto.getUnitPrice());
           saleItemRepository.save(existingSaleItem);
@@ -48,7 +49,7 @@ public class SaleItemServiceImpl implements SaleItemService{
 
     @Override 
     public SaleItemDto getSaleItem(Long id) throws HmsException{
-          return saleItemRepository.findById(id).map(SaleItem::toDto).orElseThrow(()-> new HmsException("SALE_ITEM_NOT_FOUND"));
+          return saleItemRepository.findById(id).map(SaleItem::toDto).orElseThrow(()-> new HmsException("SALE_ITEM_NOT_FOUND", HttpStatus.NOT_FOUND));
     }
 
     @Override 

@@ -65,7 +65,7 @@ if (authHeader == null) {
     throw new RuntimeException("Authorization header is missing");
 }
                         
-                          if(authHeader==null||!authHeader.startsWith("Bearer ")){
+                          if(!authHeader.startsWith("Bearer ")){
                               throw new RuntimeException("Authorization header is invalid");
                           }
                           String token=authHeader.substring(7);
@@ -77,7 +77,18 @@ if (authHeader == null) {
             .parseSignedClaims(token)
             .getPayload();
 
-    System.out.println("JWT VALID");
+   System.out.println("JWT VALID");
+
+
+String userId =  claims.get("id").toString();
+
+
+exchange = exchange.mutate()
+        .request(r -> r
+        .header("X-User-Id", userId)
+        .header("X-Secret-Key", "SECRET")
+        )
+        .build();
 
 }
 catch(Exception e){
@@ -87,10 +98,7 @@ catch(Exception e){
     throw new RuntimeException(e.getMessage());
 
 }
-                            return chain.filter(
-                       exchange.mutate()
-                       .request(r->r.header("X-Secret-Key","SECRET"))
-                       .build());
+                           return chain.filter(exchange);
                        };
                     }
 

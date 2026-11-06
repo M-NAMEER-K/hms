@@ -1,29 +1,34 @@
 import { useEffect, useState } from "react";
 import { FiPlusCircle } from "react-icons/fi";
-import { appointmentReasons } from "../../Utils/constants/Appointment";
-import { getDoctorDropdownsServiceAPI } from "../../Services/ProfileServiceOps";
-import { cancelAppointmentServiceAPI, getAllAppointmentsByPatientServiceAPI, getAppointmentReportByAppointmentIdServiceAPI, scheduleAppointmentServiceAPI, updateAppointmentServiceAPI } from "../../Services/AppointmentServiceOps";
+import { appointmentReasons } from "../../../Utils/constants/Appointment";
+import { getDoctorDropdownsServiceAPI } from "../../../Services/ProfileServiceOps";
+import { cancelAppointmentServiceAPI, getAllAppointmentsByPatientServiceAPI, getAppointmentReportByAppointmentIdServiceAPI, scheduleAppointmentServiceAPI, updateAppointmentServiceAPI } from "../../../Services/AppointmentServiceOps";
 import { useSelector } from "react-redux";
-import type { RootState } from "../../reducer/Store/store";
-import { validateAppointment, type AppointmentErrors } from "../../Utils/Validators/appointmentValidators";
+import type { RootState } from "../../../reducer/Store/store";
+import { validateAppointment, type AppointmentErrors } from "../../../Utils/Validators/appointmentValidators";
 import { FaRegEdit } from "react-icons/fa";
 import { MdDeleteForever } from "react-icons/md";
-import Loader from "../Common/Loader";
-import Pagination from "../Common/Pagination";
-import Filter from "../Common/Filter";
-import { appointmentFilterConfig } from "../../Utils/filters/appointmentFilterConfig";
+import Loader from "../../Common/Loader";
+import Pagination from "../../Common/Pagination";
+import Filter from "../../Common/Filter";
+import { appointmentFilterConfig } from "../../../Utils/filters/appointmentFilterConfig";
 import { HiOutlineDocumentReport } from "react-icons/hi";
+import type { ApiError } from "../../Common/ErrorModal";
+import ErrorModal from "../../Common/ErrorModal";
+import { getProfileImageAPI } from "../../../Services/MediaServiceOps";
+import { FaRegCircleUser } from "react-icons/fa6";
 
 
 const PatientAppointment=()=>{
-    interface Doctor {
-    id: number;
-    name: string;
-}
 
+
+
+ const [doctorImages, setDoctorImages] = useState<Record<number,string>>({});
+const [previewImage, setPreviewImage] = useState<string | null>(null);
+    const [apiErrors, setApiErrors] = useState<ApiError[]>([]);
     const [editingId, setEditingId] = useState<number | null>(null);
     const [errors, setErrors] =useState<AppointmentErrors>({});
-    const [doctors, setDoctors] = useState<Doctor[]>([]);
+
     const [selectedDoctorId, setSelectedDoctorId] = useState<number | null>(null);
     const [showForm, setShowForm] = useState<boolean>(false);
     const [appointments, setAppointments] = useState<any[]>([]);
@@ -39,7 +44,7 @@ const PatientAppointment=()=>{
 const [selectedReport,setSelectedReport] = useState<any>(null);
 const [showReport,setShowReport] = useState(false);
 const [,setReportLoading] = useState(false);
-
+const [selectedDoctorName, setSelectedDoctorName] = useState("");
     const [currentPage, setCurrentPage] = useState(0);
     const [totalPages, setTotalPages] = useState(0);
     const pageSize = 2;
@@ -54,24 +59,25 @@ sortDirection:"DESC"
 });
 
     const user=useSelector((state:RootState)=>state.user);
-   
- useEffect(() => {
-    if (!showForm) return;
 
-    const fetchDoctors = async () => {
-        try {
-            const data = await getDoctorDropdownsServiceAPI();
-            console.log("doctordropdowns",data);
-            setDoctors(Array.isArray(data) ? data : []);
-        } catch (err) {
-            console.error(err);
-            setDoctors([]);
+    const handleApiError = (err:any)=>{
+
+    setApiErrors(prev => [
+        ...prev,
+        {
+            id: Date.now(),
+            status: err.response?.status,
+            message:
+                err.response?.data?.errorMessage ||
+                err.response?.data?.message ||
+                err.message ||
+                "Something went wrong"
         }
-    };
+    ]);
 
-    fetchDoctors();
-}, [showForm]);
+};
 
+   
 useEffect(()=>{
     loadAppointments(currentPage,filters);
 },[currentPage,filters]);
@@ -79,12 +85,12 @@ useEffect(()=>{
 const handleEdit = (appointment: any) => {
 
     setEditingId(appointment.id);
-
+    setSelectedDoctorName(appointment.doctorName);
     setSelectedDoctorId(appointment.doctorId);
     setAppointmentTime(
         appointment.appointmentTime.slice(0,16)
     );
-
+  
     setReason(appointment.reason);
     setNotes(appointment.notes);
 
@@ -92,15 +98,28 @@ const handleEdit = (appointment: any) => {
 };
 
 const confirmDelete = async () => {
+
     if (!deleteId) return;
 
-    await cancelAppointmentServiceAPI(deleteId);
+    try{
 
-    setDeleteId(null);
-    setShowDeleteModal(false);
+        await cancelAppointmentServiceAPI(deleteId);
 
-    loadAppointments(currentPage);
+        setDeleteId(null);
+        setShowDeleteModal(false);
+
+        loadAppointments(currentPage);
+
+    }
+    catch(error:any){
+
+        handleApiError(error);
+
+    }
+
 };
+
+
 const cancelDelete = () => {
     setDeleteId(null);
     setShowDeleteModal(false);
@@ -112,6 +131,35 @@ const loadAppointments = async (page:number,appliedFilters=filters) => {
     const data = await getAllAppointmentsByPatientServiceAPI(user.id , page , pageSize ,  appliedFilters);
 
     setAppointments(data.content || []);
+    const appointmentsWithImages = data.content || [];
+
+const imageMap: Record<number,string> = {};
+
+await Promise.all(
+    appointmentsWithImages.map(async (appointment:any)=>{
+
+        if(appointment.profilePictureId){
+
+            try{
+
+                const url = await getProfileImageAPI(
+                    appointment.profilePictureId
+                );
+
+                imageMap[appointment.doctorId] = url;
+
+            }catch(err){
+
+                console.log(err);
+            }
+
+        }
+
+    })
+);
+
+
+setDoctorImages(imageMap);
      setCurrentPage(data.number);
 
     setTotalPages(data.totalPages);
@@ -154,22 +202,12 @@ if (Object.keys(validationErrors).length > 0) {
         notes,
     });
 
-} else {
-
-    await scheduleAppointmentServiceAPI({
-        patientId: user.id,
-        doctorId: selectedDoctorId,
-        appointmentTime,
-        reason,
-        notes,
-    });
-
-}
+} 
 
  
 
          } catch (error) {
-             console.log(error);
+              handleApiError(error);
          }finally{
             setLoading(false);
          }
@@ -185,13 +223,13 @@ const handleViewReport = async(appointment:any)=>{
         const report = await getAppointmentReportByAppointmentIdServiceAPI(
             appointment.id
         );
-
+       console.log(report);
         setSelectedAppointment(appointment);
         setSelectedReport(report);
         setShowReport(true);
 
     }catch(error){
-        console.log(error);
+        handleApiError(error);
     }
     finally{
         setReportLoading(false);
@@ -202,11 +240,12 @@ if(pageLoading){
     return <Loader/>;
 }
      return(
-        <div className="w-[90%] h-screen  ">
-                
+        <div className="w-[98%] ">
                   
-                <div className="w-full flex justify-between ">
-                  <button  onClick={() => setShowForm(true)} className="bg-green-500 flex items-center text-white rounded-lg p-2 gap-x-2"> <FiPlusCircle /> Schedule Appointment</button>
+                  <ErrorModal errors={apiErrors} onClose={()=>setApiErrors([])}/>
+                  
+                <div className="w-full flex justify-end py-2">
+               
                                                 <Filter
 
 config={appointmentFilterConfig}
@@ -228,7 +267,7 @@ setCurrentPage(0);
                <div className="fixed inset-0 z-50 flex items-center justify-center ">
                <div className="w-[90%] sm:w-[95%] md:w-[80%] lg:w-[60%] border rounded-lg  border-green-500 p-2 bg-gray-100 ">   
                    <div className="flex justify-between items-center">
-                   <p className="text-green-500 font-medium " > {editingId? "Edit Appointment": "Schedule Appointment"}</p>
+                   <p className="text-green-500 font-medium " > Edit Appointment</p>
                  
                  <button onClick={() => setShowForm(false)} className=" bg-red-500 hover:bg-red-300 text-white px-2 py-1 rounded-lg"> X </button>
                </div>
@@ -238,30 +277,7 @@ setCurrentPage(0);
 
                  <div className="w-full flex flex-col ">
                   <label className="font-medium">Doctor</label>
-                <select
-value={selectedDoctorId ?? ""}
-onChange={(e)=>{
-    const value = Number(e.target.value);
-
-    setSelectedDoctorId(value);
-
-    if(value){
-        setErrors(prev=>({
-            ...prev,
-            doctorId:undefined
-        }));
-    }
-}}
- className=" outline-none rounded-lg border border-gray-500 p-2"
->
-    <option value="">Select Doctor</option>
-
-    {doctors.map((doctor) => (
-        <option key={doctor.id} value={doctor.id}>
-            {doctor.name}
-        </option>
-    ))}
-</select>
+                  <p className=" outline-none rounded-lg border border-gray-500 p-2"> {selectedDoctorName}</p>
                  </div>
                  {errors.doctorId && (
 <p className="text-red-500 text-xs mt-1">
@@ -270,23 +286,13 @@ onChange={(e)=>{
 )}
                   <div className="w-full flex flex-col ">
                      <label className="font-medium">Appointment Time</label>
-                     <input type="datetime-local"
+                    <input 
+type="datetime-local"
 value={appointmentTime}
-onChange={(e)=>{
-
-    const value=e.target.value;
-
-    setAppointmentTime(value);
-
-    if(value){
-        setErrors(prev=>({
-            ...prev,
-            appointmentTime:undefined
-        }));
-    }
-
-}}
-  placeholder="Enter time" className=" outline-none rounded-lg border border-gray-500 p-2"/>
+readOnly
+className="outline-none rounded-lg border border-gray-500 p-2  cursor-not-allowed"
+/>
+ 
                   </div>
                   {errors.appointmentTime && (
 <p className="text-red-500 text-xs mt-1">
@@ -382,7 +388,26 @@ loading
         <div
             key={appointment.id}
             className="border flex flex-col gap-y-2 rounded-lg p-2 shadow bg-white my-2"
-        >
+        >  
+        <div className="flex items-center gap-x-2">
+
+
+{
+doctorImages[appointment.doctorId] ?
+
+<img
+src={doctorImages[appointment.doctorId]}
+alt="doctor"
+onClick={()=>setPreviewImage(doctorImages[appointment.doctorId])}
+className="w-10 h-10 rounded-full object-cover cursor-pointer"
+/>
+
+:
+
+<FaRegCircleUser size={35}/>
+
+}
+</div>
             <div className="">
                 <p className="text-xs text-gray-500 font-semibold">
                     Doctor
@@ -403,6 +428,27 @@ loading
                 </p>
                 <p>{appointment.reason}</p>
             </div>
+             <div className="">
+                <p className="text-xs text-gray-500 font-semibold">
+                    Status
+                </p>
+
+            
+              <div
+                className={` w-[40%] flex justify-center items-center rounded-lg text-white font-semibold p-1
+                ${
+                appointment.status==="SCHEDULED"
+                ?"bg-blue-300"
+                :appointment.status==="COMPLETED"
+                ?"bg-green-300"
+                :appointment.status==="CANCELLED"
+                ?"bg-red-300"
+                :"bg-gray-300"
+                }`}
+                >
+                    {appointment.status}
+                </div>
+                </div>
 
             <div className="mt-3 flex justify-end gap-2">
 
@@ -453,6 +499,7 @@ loading
         
     {/* Fixed Header */}
     <div className="w-full flex  bg-green-500 text-white font-semibold p-1">
+        <div  className="w-[10%] flex items-center p-1"></div>
         <div className="w-[30%] flex items-center p-1">
             Doctor
         </div>
@@ -482,8 +529,27 @@ loading
             <div
                 key={appointment.id}
                 className="w-full flex   p-1 border-t hover:bg-gray-100"
-            >
+            >  
+             <div  className="w-[10%] flex items-center p-1">
 
+{
+doctorImages[appointment.doctorId] ?
+
+<img
+src={doctorImages[appointment.doctorId]}
+alt="doctor"
+onClick={()=>setPreviewImage(doctorImages[appointment.doctorId])}
+className="w-10 h-10 rounded-full object-cover cursor-pointer"
+/>
+
+:
+
+<FaRegCircleUser size={35}/>
+
+}
+
+
+             </div>
                 <div className="w-[30%] flex items-center p-1 break-words">
                     {appointment.doctorName}
                 </div>
@@ -497,7 +563,7 @@ loading
                 </div>
 
                 <div
-                className={`w-[10%] flex justify-center items-center rounded-lg text-white font-semibold
+                className={`w-[10%] flex  justify-center items-center rounded-lg text-white font-semibold p-1
                 ${
                 appointment.status==="SCHEDULED"
                 ?"bg-blue-300"
@@ -623,7 +689,15 @@ className="text-red-500 text-xl font-bold"
 
 <div className="p-5 overflow-y-auto max-h-[70vh] space-y-4">
 
+<div className="flex justify-evenly font-medium border rounded p-2">
+  <div>
+ PATIENT_ID : {selectedReport?.patientId}
+</div>
 
+<div>
+ PRESCRIPTION_ID : {selectedReport?.prescription?.id}
+</div>
+</div>
 <div>
 <p className="font-semibold">
 Doctor

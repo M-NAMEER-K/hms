@@ -20,10 +20,10 @@ import feign.Param;
 
 public interface AppointmentRepository extends JpaRepository<Appointment , Long> , JpaSpecificationExecutor<Appointment>{
     
-    @Query("SELECT new com.hm.appointment_ms.dto.AppointmentDetailsDto(a.id , a.patientId , null , null , null,a.doctorId , null , a.appointmentTime , a.status , a.reason , a.notes) FROM Appointment a WHERE a.patientId=?1")
+    @Query("SELECT new com.hm.appointment_ms.dto.AppointmentDetailsDto(a.id , a.patientId , null , null,null , null,a.doctorId , null , a.appointmentTime , a.status , a.reason , a.notes) FROM Appointment a WHERE a.patientId=?1")
     Page<AppointmentDetailsDto> findAllByPatientId(Long patientId , Pageable page);
 
-    @Query("SELECT new com.hm.appointment_ms.dto.AppointmentDetailsDto(a.id , a.patientId , null , null , null,a.doctorId , null , a.appointmentTime , a.status , a.reason , a.notes) FROM Appointment a WHERE a.doctorId=?1")
+    @Query("SELECT new com.hm.appointment_ms.dto.AppointmentDetailsDto(a.id , a.patientId , null ,null, null , null,a.doctorId , null , a.appointmentTime , a.status , a.reason , a.notes) FROM Appointment a WHERE a.doctorId=?1")
     Page<AppointmentDetailsDto> findAllByDoctorId(Long doctorId,  Pageable page);
 
     @Query("SELECT new com.hm.appointment_ms.dto.MonthlyVisitDto(CAST(FUNCTION('MONTHNAME',a.appointmentTime) as String),COUNT(a))from Appointment a where a.patientId=?1 AND YEAR(a.appointmentTime)=YEAR(CURRENT_DATE()) GROUP BY FUNCTION('MONTH',a.appointmentTime),CAST(FUNCTION('MONTHNAME',a.appointmentTime) as String) ORDER BY FUNCTION('MONTH',a.appointmentTime)")

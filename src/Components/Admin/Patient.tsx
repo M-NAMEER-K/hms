@@ -3,6 +3,8 @@ import { getAllPatientsAPI } from "../../Services/ProfileServiceOps";
 import { FaRegEye } from "react-icons/fa";
 import Loader from "../Common/Loader";
 import Pagination from "../Common/Pagination";
+import { getProfileImageAPI } from "../../Services/MediaServiceOps";
+import { FaRegCircleUser } from "react-icons/fa6";
 
 
 interface Patient {
@@ -26,7 +28,8 @@ const Patient=()=>{
     const [pageLoading, setPageLoading] = useState(true);
     const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
     const [showModal, setShowModal] = useState(false);
-
+const [patientImages,setPatientImages] = useState<Record<number,string>>({});
+const [previewImage,setPreviewImage] = useState<string|null>(null);
     const [currentPage, setCurrentPage] = useState(0);
 const [totalPages, setTotalPages] = useState(0);
 
@@ -44,6 +47,45 @@ const pageSize = 5;
             console.log(data);
 
             setPatients(data.content || []);
+            const patientsData = data.content || [];
+
+const imageMap: Record<number,string> = {};
+
+
+await Promise.all(
+
+patientsData.map(async(patient:Patient)=>{
+
+
+if(patient.profilePictureId){
+
+try{
+
+const url = await getProfileImageAPI(
+patient.profilePictureId
+);
+
+
+imageMap[patient.id]=url;
+
+
+}
+catch(err){
+
+console.log(err);
+
+}
+
+
+}
+
+
+})
+
+);
+
+
+setPatientImages(imageMap);
 setCurrentPage(data.number);
 setTotalPages(data.totalPages);
 
@@ -82,6 +124,27 @@ setTotalPages(data.totalPages);
             key={patient.id}
             className="border rounded-lg shadow bg-white p-2 my-2 flex flex-col gap-y-1"
         >
+             <div className="w-[10%]">
+                                          
+            {
+            patientImages[patient.id] ?
+            
+            <img
+            src={patientImages[patient.id]}
+            alt="doctor"
+            onClick={()=>setPreviewImage(patientImages[patient.id])}
+            className="w-10 h-10 rounded-full object-cover cursor-pointer"
+            />
+            
+            :
+            
+            <FaRegCircleUser
+            size={35}
+            />
+            
+            }
+            
+                                          </div>
             <div>
                 <p className="text-xs font-semibold text-gray-500">
                     Name
@@ -124,10 +187,11 @@ setTotalPages(data.totalPages);
                     {/* Header */}
 
                     <div className="w-full flex bg-green-500 text-white font-semibold p-2">
+                        <div className="w-[10%]"></div>
                         <div className="w-[30%]">Name</div>
                         <div className="w-[30%]">Email</div>
                         <div className="w-[20%]">Phone Number</div>
-                        <div className="w-[20%]"> </div>
+                        <div className="w-[10%]"> </div>
                     </div>
 
                     {/* Rows */}
@@ -137,6 +201,27 @@ setTotalPages(data.totalPages);
                             key={patient.id}
                             className="w-full flex border-t p-2 hover:bg-gray-100"
                         >
+                             <div className="w-[10%]">
+                                                          
+                            {
+                            patientImages[patient.id] ?
+                            
+                            <img
+                            src={patientImages[patient.id]}
+                            alt="doctor"
+                            onClick={()=>setPreviewImage(patientImages[patient.id])}
+                            className="w-10 h-10 rounded-full object-cover cursor-pointer"
+                            />
+                            
+                            :
+                            
+                            <FaRegCircleUser 
+                            size={35}
+                            />
+                            
+                            }
+                            
+                                                          </div>
                             <div className="w-[30%] break-words">
                                 {patient.name}
                             </div>
@@ -148,7 +233,7 @@ setTotalPages(data.totalPages);
                             <div className="w-[20%] break-words">
                                 {patient.phone}
                             </div>
-                           <div className="w-[20%] flex justify-center items-center">
+                           <div className="w-[10%] flex justify-center items-center">
                    <FaRegEye size={20} className="text-blue-500 hover:text-blue-300 cursor-pointer"
         onClick={() => {
             setSelectedPatient(patient);
@@ -246,6 +331,36 @@ setTotalPages(data.totalPages);
     totalPages={totalPages}
     onPageChange={(page)=>setCurrentPage(page)}
 />
+{
+previewImage && (
+
+<div className="fixed inset-0 bg-black/30 backdrop-blur flex items-center justify-center z-50">
+
+
+<div className="relative">
+
+
+<button
+onClick={()=>setPreviewImage(null)}
+className="absolute -top-4 -right-4 bg-red-500 text-white rounded-full w-8 h-8 text-xl"
+>
+×
+</button>
+
+
+<img
+src={previewImage}
+className="max-w-[80vw] max-h-[90vh] rounded-xl object-contain"
+/>
+
+
+</div>
+
+
+</div>
+
+)
+}
 
         </div>
     );

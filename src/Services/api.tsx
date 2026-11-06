@@ -52,6 +52,9 @@ export const appointmentService = {
     GET_RECORDS_BY_PATIENT:GATEWAY_SERVICE_URL +"/appointment/report/getRecordsByPatientId",
     GET_PRESCRIPTIONS_BY_PATIENT:GATEWAY_SERVICE_URL +"/appointment/report/getPrescriptionsByPatientId",
     COUNT_REASON_BY_PATIENT: GATEWAY_SERVICE_URL + "/appointment/countReasonByPatient",
+    
+    GET_PRESCRIPTION_BY_PATIENT_ID_AND_PRESCRIPTION_ID : GATEWAY_SERVICE_URL + "/appointment/report/patient/{patientId}/prescription/{prescriptionId}",
+   
    
 };
 
@@ -74,13 +77,23 @@ export const pharmacyService = {
     UPDATE_SALE: GATEWAY_SERVICE_URL + "/pharmacy/sales/update",
     GET_SALE: GATEWAY_SERVICE_URL + "/pharmacy/sales/get",
     GET_SALE_ITEMS: GATEWAY_SERVICE_URL + "/pharmacy/sales/getSaleItem",
-    GET_ALL_SALES:GATEWAY_SERVICE_URL+"/pharmacy/sales/getAll"
+    GET_ALL_SALES:GATEWAY_SERVICE_URL+"/pharmacy/sales/getAll",
+
 
 };
 
 export const mediaService={
          
     UPLOAD_FILE : GATEWAY_SERVICE_URL + "/media/upload",
+    REPLACE_FILE : GATEWAY_SERVICE_URL +"/media/replace",
     GET_FILE : GATEWAY_SERVICE_URL + "/media",
     DELETE_FILE: GATEWAY_SERVICE_URL + "/media"
+    
 }
+
+export const paymentService = {
+
+    CREATE_ORDER: GATEWAY_SERVICE_URL + "/payment/create-order",
+    VERIFY_PAYMENT: GATEWAY_SERVICE_URL + "/payment/verify"
+
+};

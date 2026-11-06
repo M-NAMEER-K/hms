@@ -23,10 +23,11 @@ public class AppointmentDto {
     private StatusDto status;
     private String reason;
     private String notes;
-
+    private String referenceId;
+      
 
     public Appointment toEntity(){
-          return new Appointment(this.id,this.patientId,this.doctorId,this.appointmentTime,this.status,this.reason,this.notes);
+          return new Appointment(this.id,this.patientId,this.doctorId,this.appointmentTime,this.status,this.reason,this.notes,this.referenceId);
     }
     
 }

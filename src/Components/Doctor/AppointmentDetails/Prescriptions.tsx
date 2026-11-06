@@ -6,6 +6,7 @@ import Loader from "../../Common/Loader";
 import Filter from "../../Common/Filter";
 import Pagination from "../../Common/Pagination";
 import {prescriptionFilterConfig} from "../../../Utils/filters/prescriptionFilterConfig"
+import ErrorModal, { type ApiError } from "../../Common/ErrorModal";
 
 interface PrescriptionProps {
     appointment: any;
@@ -21,7 +22,7 @@ const [selectedMedicines, setSelectedMedicines] = useState<any[]>([]);
 const [selectedDate, setSelectedDate] = useState("");
 const [currentPage, setCurrentPage] = useState(0);
 const [totalPages, setTotalPages] = useState(0);
-
+const [apiErrors,setApiErrors] = useState<ApiError[]>([]);
 const pageSize = 2;
 
 
@@ -35,6 +36,22 @@ const [filters, setFilters] = useState({
 
 });
 
+const handleApiError = (err:any)=>{
+
+    setApiErrors(prev=>[
+        ...prev,
+        {
+            id:Date.now(),
+            status:err.response?.status,
+            message:
+            err.response?.data?.errorMessage ||
+            err.response?.data?.message ||
+            err.message ||
+            "Something went wrong"
+        }
+    ]);
+
+};
 
 const fetchPrescriptions = async () => {
 
@@ -83,9 +100,20 @@ useEffect(() => {
 
 
 const handleView = async (appointmentId: number) => {
-    const data = await getAppointmentDetailsServiceAPI(appointmentId);
 
-    onAppointmentSelect(data);
+    try{
+
+        const data = await getAppointmentDetailsServiceAPI(appointmentId);
+
+        onAppointmentSelect(data);
+
+    }
+    catch(err:any){
+
+        handleApiError(err);
+
+    }
+
 };
 
 if (pageLoading) {
@@ -93,7 +121,9 @@ if (pageLoading) {
 }
 
 return (
-  <div className="w-full flex justify-center">
+  <div className="w-full flex justify-center">   
+        <ErrorModal errors={apiErrors} onClose={()=>setApiErrors([])} />
+
     <div className="w-[95%]">
         <div className="w-full flex justify-between">
              <p className="text-xl font-medium text-green-500">

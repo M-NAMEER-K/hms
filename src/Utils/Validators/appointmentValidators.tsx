@@ -5,12 +5,43 @@ export interface AppointmentFormData {
     notes: string;
 }
 
+export interface FetchPrescriptionFormData{
+    patientId:string;
+    prescriptionId:string;
+}
+
 export interface AppointmentErrors {
     doctorId?: string;
     appointmentTime?: string;
     reason?: string;
     notes?: string;
 }
+
+export interface FetchPrescriptionErrors {
+    patientId?: string;
+    prescriptionId?: string;
+}
+
+
+export const validateFetchPrescription = ( data: FetchPrescriptionFormData): FetchPrescriptionErrors => {
+
+    const errors: FetchPrescriptionErrors = {};
+
+    if (!data.patientId.trim()) {
+        errors.patientId = "Patient ID is required";
+    } else if (!/^\d+$/.test(data.patientId)) {
+        errors.patientId = "Patient ID must contain only numbers";
+    }
+
+    if (!data.prescriptionId.trim()) {
+        errors.prescriptionId = "Prescription ID is required";
+    } else if (!/^\d+$/.test(data.prescriptionId)) {
+        errors.prescriptionId =
+            "Prescription ID must contain only numbers";
+    }
+
+    return errors;
+};
 
 export const validateAppointment = (
     data: AppointmentFormData

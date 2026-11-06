@@ -29,11 +29,13 @@ public class ExceptionControllerAdvice {
                  ErrorInfo error=new ErrorInfo("Some error occured",HttpStatus.INTERNAL_SERVER_ERROR.value(),LocalDateTime.now());
                  return new ResponseEntity<>(error,HttpStatus.INTERNAL_SERVER_ERROR);
         }
-    @ExceptionHandler(HmsException.class)
-        public ResponseEntity<ErrorInfo> hmsExceptionHandler(HmsException e){
-                 ErrorInfo error=new ErrorInfo(environment.getProperty(e.getMessage()),HttpStatus.INTERNAL_SERVER_ERROR.value(),LocalDateTime.now());
-                 return new ResponseEntity<>(error,HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+  @ExceptionHandler(HmsException.class)
+public ResponseEntity<ErrorInfo> hmsExceptionHandler(HmsException e){
+
+    ErrorInfo error=new ErrorInfo( environment.getProperty(e.getMessage()), e.getStatus().value(), LocalDateTime.now() );
+
+    return new ResponseEntity<>(error,e.getStatus());
+}
 
     @ExceptionHandler({MethodArgumentNotValidException.class,  ConstraintViolationException.class})
       public ResponseEntity<ErrorInfo>handleValidationExceptions(Exception e){

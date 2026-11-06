@@ -18,6 +18,7 @@ public class AppointmentDetailsDto {
     private String patientName;
     private String patientEmail;
     private String patientPhone;
+    private Long profilePictureId;
     private Long doctorId;
     private String doctorName;
     private LocalDateTime appointmentTime;

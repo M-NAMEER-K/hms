@@ -9,14 +9,17 @@ import { allergies as allergiesList } from "../../Utils/constants/PatientProfile
 import Select from "react-select";
 import { getPatientProfileServiceAPI, updatePatientProfilePictureAPI, updatePatientProfileServiceAPI } from "../../Services/ProfileServiceOps";
 import { FaRegCircleUser } from "react-icons/fa6";
-import { deleteProfileImageAPI, getProfileImageAPI, uploadProfileImageAPI } from "../../Services/MediaServiceOps";
+import { deleteProfileImageAPI, getProfileImageAPI, replaceProfileImageAPI, uploadProfileImageAPI } from "../../Services/MediaServiceOps";
 import Loader from "../Common/Loader";
+import type { ApiError } from "../Common/ErrorModal";
+import ErrorModal from "../Common/ErrorModal";
 
 
 
 const PatientProfile=()=>{
     
    const [savedProfile, setSavedProfile] = useState<any>(null);
+   const [apiErrors, setApiErrors] = useState<ApiError[]>([]);
     const [showImagePreview,setShowImagePreview] = useState(false);
    const [isEditing,setIsEditing]=useState<boolean>(false);
    const [errors, setErrors] = useState<PatientProfileErrors>({});
@@ -30,16 +33,32 @@ const [chronicDisease, setChronicDisease] = useState<string[]>([]);
 const [country, setCountry] = useState("India");
 const [countryCode, setCountryCode] = useState("+91");  
 const [loading, setLoading] = useState(false);
-const [pageLoading, setPageLoading] = useState(false); // full page
+const [pageLoading, setPageLoading] = useState(true);
 
 const [profilePicId,setProfilePicId]=useState<number|null>(null);
 const [profilePicUrl,setProfilePicUrl]=useState<string|null>(null);
-
+const [imageUploading, setImageUploading] = useState(false);
+const [imageRemoving, setImageRemoving] = useState(false);
 
 
 
 const user=useSelector((state:RootState)=>state.user);
 
+const handleApiError = (err:any)=>{
+
+ setApiErrors(prev => [
+    ...prev,
+    {
+        id: Date.now(),
+        status: err.response?.status,
+        message:
+          err.response?.data?.errorMessage ||
+          err.response?.data?.message ||
+          err.message ||
+          "Something went wrong"
+    }
+]);
+};
 
 const allergyOptions = allergiesList.map((item) => ({
   value: item,
@@ -60,11 +79,11 @@ useEffect(() => {
 
         try {
 
-            console.log("calling");
+         
 
             const data = await getPatientProfileServiceAPI(user.profileId);
 
-            console.log("x", data);
+            console.log(data);
 
             if (data) {
                     setSavedProfile(data);
@@ -73,11 +92,22 @@ useEffect(() => {
 
                 if(data.profilePictureId){
 
-                    const imageUrl = await getProfileImageAPI(
-                        data.profilePictureId
-                    );
+                     try{
 
-                    setProfilePicUrl(imageUrl);
+            const imageUrl = await getProfileImageAPI(
+                data.profilePictureId
+            );
+               console.log("IMAGE RESPONSE:", imageUrl);
+            setProfilePicUrl(imageUrl);
+
+        }
+        catch(err:any){
+
+           console.log(err);
+
+        }
+
+                    
                 }
 
 
@@ -93,7 +123,7 @@ useEffect(() => {
 
         } catch(err){
 
-            console.log(err);
+             console.log(err);
 
         } finally {
 
@@ -128,35 +158,65 @@ const handleCancel = () => {
   setLoading(false);
   setIsEditing(false);
 };
-const handleImageUpload=async(
- e:React.ChangeEvent<HTMLInputElement>
-)=>{
+
+const handleImageUpload=async(e:React.ChangeEvent<HTMLInputElement>)=>{
 
 const file=e.target.files?.[0];
 
-if(!file)
-return;
+if(!file){
+ return;
+}
+
+setImageUploading(true);
+
+try{
+
+let response;
 
 
-const response=await uploadProfileImageAPI(file);
+if(profilePicId){
 
-const mediaId=response.id;
+    response = await replaceProfileImageAPI(
+        profilePicId,
+        file
+    );
+
+}
+else{
+
+    response = await uploadProfileImageAPI(file);
+
+}
+
+
+const mediaId = response.id;
 
 
 setProfilePicId(mediaId);
 
 
-const imageUrl=await getProfileImageAPI(mediaId);
+const imageUrl = await getProfileImageAPI(mediaId);
 
 setProfilePicUrl(imageUrl);
 
 
-
 await updatePatientProfilePictureAPI(
- user.profileId,
- mediaId
+    user.profileId,
+    mediaId
 );
 
+
+}
+catch(err:any){
+
+handleApiError(err);
+
+}
+finally{
+
+setImageUploading(false);
+
+}
 
 }
 
@@ -166,20 +226,50 @@ const handleRemoveImage = async()=>{
         return;
 
 
-    // First remove reference
-    await updatePatientProfilePictureAPI(
-        user.profileId,
-        null
-    );
+setImageRemoving(true);
+let removedReference=false;
 
 
-    // Then delete media
-    await deleteProfileImageAPI(profilePicId);
+// API 1
+try{
+
+await updatePatientProfilePictureAPI(
+ user.profileId,
+ null
+);
+
+removedReference=true;
+
+}
+catch(err:any){
+
+handleApiError(err);
+
+}
 
 
-    setProfilePicId(null);
-    setProfilePicUrl(null);
+// API 2
+if(removedReference){
 
+try{
+
+await deleteProfileImageAPI(profilePicId);
+
+setProfilePicId(null);
+setProfilePicUrl(null);
+
+}
+catch(err:any){
+
+handleApiError(err);
+
+}
+
+
+  
+
+}
+setImageRemoving(false);
 }
 
 const handleSubmit = async(e: React.FormEvent<HTMLFormElement>) => {
@@ -208,16 +298,23 @@ const handleSubmit = async(e: React.FormEvent<HTMLFormElement>) => {
     
 
      setLoading(true);
+try {
 
-    try {
-           await updatePatientProfileServiceAPI(formData);
-            setSavedProfile(formData);
-        console.log(formData);
+ await updatePatientProfileServiceAPI(formData);
+ setSavedProfile(formData);
+ setIsEditing(false);
 
-        setIsEditing(false);
-    } finally {
-        setLoading(false);
-    }
+}
+catch(err:any){
+
+ handleApiError(err);
+
+}
+finally {
+
+ setLoading(false);
+
+}
 };
 
 if(pageLoading){
@@ -226,7 +323,7 @@ if(pageLoading){
 
   return( 
     <div className="w-[90%] flex flex-col items-center h-screen   ">
-             
+                <ErrorModal errors={apiErrors}  onClose={()=>setApiErrors([])} />
                  <p className="text-3xl  underline">Profile</p>
                   <div className="flex flex-col gap-y-3 py-2 w-full ">
                     <div className="flex gap-x-3 ">
@@ -266,7 +363,7 @@ if(pageLoading){
                     
                     <p>{user.email}</p>
                     <p>{user.role}</p>
-                
+                    <p>PATIENT_ID : {user.id}</p>
                  </div>
                  </div>
                    
@@ -274,15 +371,20 @@ if(pageLoading){
 
            
 <label
-className="cursor-pointer bg-green-500 text-white px-3 py-1 rounded-lg"
+className={`cursor-pointer bg-green-500 text-white px-3 py-1 rounded-lg ${
+imageUploading ? "opacity-50 cursor-not-allowed" : ""
+}`}
 >
-Upload
 
+{
+imageUploading ? "Uploading..." : "Upload"
+}
 
 <input
 type="file"
 accept="image/*"
 hidden
+disabled={imageUploading}
 onChange={handleImageUpload}
 />
 
@@ -295,10 +397,17 @@ profilePicUrl &&
 
 <button
 type="button"
+disabled={imageRemoving}
 onClick={handleRemoveImage}
-className="bg-red-500 text-white px-3 py-1 rounded-lg"
+className={`bg-red-500 text-white px-3 py-1 rounded-lg ${
+imageRemoving ? "opacity-50 cursor-not-allowed" : ""
+}`}
 >
-Remove
+
+{
+imageRemoving ? "Removing..." : "Remove"
+}
+
 </button>
 
 }

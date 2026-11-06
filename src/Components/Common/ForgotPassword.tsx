@@ -2,6 +2,8 @@
 import { useState } from "react";
 import { forgotPasswordAPI } from "../../Services/UserServiceOps";
 import { validateForgotPassword } from "../../Utils/Validators/authValidators";
+import type { ApiError } from "./ErrorModal";
+import ErrorModal from "./ErrorModal";
 
 
 
@@ -13,7 +15,7 @@ import { validateForgotPassword } from "../../Utils/Validators/authValidators";
 
 
      const [email,setEmail]=useState<string>("");
-     
+     const [apiErrors, setApiErrors] = useState<ApiError[]>([]);
      const [loading,setLoading] = useState<boolean>(false);
      const [errors,setErrors]=useState<{email?:string;}>({});
       
@@ -47,7 +49,16 @@ if(Object.keys(validationErrors).length>0){
          }
      catch(err:any){
            console.log(err.response.data);
-    
+        setApiErrors([
+        {
+            id: Date.now(),
+            
+            status: err.response?.status,
+            message:
+                err.response?.data?.errorMessage ||
+                "Something went wrong while sending reset link."
+        }
+    ]);
 
 }
 finally{
@@ -64,7 +75,7 @@ finally{
 
 return(
       <div className="w-screen min-h-screen  p-2">
-       
+              <ErrorModal  errors={apiErrors}  onClose={()=>setApiErrors([])} />
           <h2 className="font-medium text-xl text-pink-500">
             Forgot Password
         </h2>

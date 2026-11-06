@@ -12,15 +12,12 @@ import  com.hm.user_ms.dto.UserDto;
 import com.hm.user_ms.dto.VerifyOtpDto;
 import  com.hm.user_ms.service.UserService;
 import  com.hm.user_ms.exception.HmsException;
+
 import  com.hm.user_ms.jwt.JwtUtil;
 
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.web.bind.annotation.CrossOrigin;
+
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.validation.annotation.Validated;
@@ -29,7 +26,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import jakarta.validation.Valid;
+
 
 
 @RestController
@@ -40,34 +37,29 @@ public class UserApi {
     @Autowired
      private UserService userService;
 
-     @Autowired
-     private UserDetailsService userDetailsService;
-
-     @Autowired
-     private AuthenticationManager authenticationManager;
 
      @Autowired 
      private JwtUtil jwtUtil;
 
     
 
-     @PostMapping("/login")
-     public ResponseEntity<LoginResponseDto> loginUser(@RequestBody LoginDto loginDto) throws HmsException{
-               try{
-                
+@PostMapping("/login")
+public ResponseEntity<LoginResponseDto> loginUser(
+        @RequestBody LoginDto loginDto) throws HmsException {
 
-     authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginDto.getEmail(), loginDto.getPassword()));
-                    
-               }
-               catch(AuthenticationException e){
-           throw new HmsException("INVALID_CREDENTIALS");
-               }
-               UserDetails userDetails=userDetailsService.loadUserByUsername(loginDto.getEmail());
-                String jwt=jwtUtil.generateToken(userDetails);
-                UserDto user=userService.getUser(loginDto.getEmail());
-                user.setPassword(null);
-                   return ResponseEntity.ok(new LoginResponseDto(jwt,user));
-     }
+
+    UserDto user = userService.loginUser(  loginDto.getEmail(), loginDto.getPassword());
+
+
+
+
+    String jwt = jwtUtil.generateToken(user);
+
+
+    user.setPassword(null);
+
+    return ResponseEntity.ok( new LoginResponseDto(jwt,user) );
+}
 
      @GetMapping("/getProfile/{id}")
      public ResponseEntity<Long> getProfile(@PathVariable  Long id) throws HmsException{

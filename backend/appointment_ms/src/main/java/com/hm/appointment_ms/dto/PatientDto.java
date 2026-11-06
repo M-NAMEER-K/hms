@@ -29,7 +29,7 @@ public class PatientDto {
     private String aadharNumber;
      
     private BloodGroup bloodGroup;
-
+    private Long profilePictureId;
       private List<String> allergies;
     private List<String> chronicDisease;
 
